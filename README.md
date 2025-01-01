@@ -1,6 +1,8 @@
 # Web-Music-Player
  A tiny web music player, including youtube audio downloading and data management. 
 
+![Screenshot 1](img/img01.png)
+
 ## Features
 - **Lightweight web music player**: A small and efficient web-based music player that allows you to play your favorite tracks directly from your browser.
 - **Can be deployed locally or publicly**: Flexibility to run the music player on your local machine for personal use or deploy it on a public server for wider access.
