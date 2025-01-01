@@ -1,6 +1,9 @@
 # Web-Music-Player
  A tiny web music player, including youtube audio downloading and data management. 
 
+![Screenshot 1](img/img01.png)
+![Screenshot 2](img/img02.png)
+
 ## Features
 - **Lightweight web music player**: A small and efficient web-based music player that allows you to play your favorite tracks directly from your browser.
 - **Can be deployed locally or publicly**: Flexibility to run the music player on your local machine for personal use or deploy it on a public server for wider access.
@@ -12,6 +15,12 @@
 ### Installation
 
 Environment: Python 3.10 or above
+
+Clone the repository.
+```shell
+$ git clone git@github.com:D101028/Web-Music-Player.git
+$ cd Web-Music-Player
+```
 
 Build the virtual environment. 
 ```shell
