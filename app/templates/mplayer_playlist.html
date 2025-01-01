@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist - {{ list_info["name"] }}</title>
+    <link rel="stylesheet" href="/static/css/mplayer_playlist.css">
+</head>
+<body>
+    <a href="/mplayer" class="back-button">←</a>
+
+    <h1>{{ list_info["name"] }}</h1>
+    <div style="text-align: center;">
+        <h4>Total {{ total }} songs</h4>
+        <a href="/mplayer_update?list_id={{ list_id }}" class="update-button">Update Playlist</a>
+        <br>
+        <a href="/mplayer/{{ list_id }}/play" class="play-button">▶️</a>
+    </div>
+
+    <hr>
+    <!-- Beautiful Interface/Layout -->
+    {% for i, videoinfo in enumerate(list_info["contents"]) %}
+    <div class="video-item">
+        <a href="/mplayer/play_single_song?list_id={{ list_id }}&song_id={{ i }}" class="single-song-link">
+            <h2>{{ videoinfo["title"] }}</h2>
+        </a>
+        <a href="https://www.youtube.com/watch?v={{ videoinfo['vid'] }}" target="_blank">YouTube Page</a>
+    
+        <!-- More Options Button -->
+        <div class="options-container">
+            <button class="more-options-btn" onclick="toggleOptions(this)"> ⋮ </button>
+            <ul class="options-list" style="display: none;">
+                <!-- <li><a href="#">Delete</a></li> -->
+                <li><a href="javascript:;" onclick="askAndRenameSong('{{ list_id }}', '{{ i }}')">Rename</a></li>
+                <!-- <li><a href="#">Share</a></li> -->
+            </ul>
+        </div>
+    </div>
+    {% endfor %}
+
+    <script>
+    function toggleOptions(button) {
+        const optionsList = button.nextElementSibling;
+
+        if (optionsList.style.display === "none" || !optionsList.style.display) {
+            optionsList.style.display = "block";
+        } else {
+            optionsList.style.display = "none";
+        }
+    }
+
+    function askAndRenameSong(list_id, song_id) {
+        const newname = encodeURIComponent(window.prompt("New name (leave blank to cancel):"));
+        if (newname === "" || newname === "null") return ;
+        let url = `/mplayer_rename_song?list_id=${list_id}&song_id=${song_id}&newname=${newname}`
+        fetch(url, {method: "POST"})
+            .then( (response) => {
+                if (response.status === 200) {
+                    alert('rename file successfully');
+                    location.reload();
+                } else {
+                    response.text().then((text) => alert(text));
+                    // location.reload();
+                }
+            } )
+            .catch( (error) => alert(error) );
+
+    }
+
+    document.addEventListener("click", (event) => {
+        const isButton = event.target.matches(".more-options-btn");
+        const isOption = event.target.matches(".options-list, .options-list *");
+
+        if (!isButton && !isOption) {
+            const allOptions = document.querySelectorAll(".options-list");
+            allOptions.forEach((list) => (list.style.display = "none"));
+        }
+    });
+    </script>
+    
+</body>
+</html>

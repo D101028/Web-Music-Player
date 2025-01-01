@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Tracker</title>
+    <link rel="stylesheet" href="/static/css/mplayer_progress.css">
+</head>
+<body>
+    <h2 id="progressContext">0 %</h2>
+    <div class="progress-container">
+        <div class="progress-bar">
+            <div class="progress-bar-inner" id="progressBar"></div>
+        </div>
+        <div class="spinner" id="spinner"></div>
+    </div>
+
+    <script>
+        let intervalId = setInterval(() => {
+            fetch('{{ fetch_progress_url }}')
+                .then(response => response.json())
+                .then(data => {
+                    const progressContext = document.getElementById('progressContext');
+                    const progressBar = document.getElementById('progressBar');
+                    const spinner = document.getElementById('spinner');
+
+                    if (data.percentage !== undefined) {
+                        progressContext.innerHTML = `${data.percentage} %`; 
+                        progressBar.style.width = `${data.percentage}%`;
+
+                        // Stop the timer when progress reaches 100%
+                        if (data.percentage >= 100) {
+                            spinner.style.display = 'none';
+                            clearInterval(intervalId); // Stop the timer
+                            setTimeout(() => {
+                                window.location.href = "{{ redir_href }}";
+                            }, 1500);
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching progress:', error));
+        }, 1000);
+    </script>
+</body>
+</html>

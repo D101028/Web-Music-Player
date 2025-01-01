@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player</title>
+    <link rel="stylesheet" href="/static/css/mplayer.css">
+</head>
+<body>
+    <a href="/" class="link-button">Home</a>
+    <h1>Music Player</h1>
+
+    <div class="input-block" id="inputBlock" style="display: none;">
+            <input type="text" id="newPlaylistName" placeholder="Enter YouTube playlist link or ID" />
+            <br>
+            <br>
+            <button id="addPlaylistButton">OK</button>
+    </div>
+    <button id="toggleInputBlockButton">Add Playlist</button>
+
+    <h2>Playlist</h2>
+    <div id="playlists"></div>
+
+    <script>
+        const listsInfo = JSON.parse('{{ lists_info|tojson }}');
+        const area = document.getElementById("playlists");
+
+        for (let [index, value] of listsInfo.entries()) {
+            const anchor = document.createElement('a');
+            anchor.textContent = value["list-name"];
+            anchor.href = '/mplayer/' + index;
+            anchor.classList.add('playlist-item');
+            area.appendChild(anchor);
+        }
+
+        function extractPlaylistID(url) {
+            // Regular expression to match the playlist ID in the URL
+            const playlistRegex = /[?&]list=([a-zA-Z0-9_-]+)/;
+            
+            // Test the URL and extract the ID if it matches
+            const match = url.match(playlistRegex);
+            if (match && match[1]) {
+                return match[1];
+            } else {
+                return url;
+            }
+        }
+        
+        document.getElementById('addPlaylistButton').addEventListener('click', () => {
+            const playlistURL = document.getElementById('newPlaylistName').value.trim();
+            if (playlistURL) {
+                // Regular expression to match the playlist ID in the URL
+                const playlistRegex = /[?&]list=([a-zA-Z0-9_-]+)/;
+                var extract_id = extractPlaylistID(playlistURL);
+                
+                url = `/mplayer_create?yt_playlist_id=${extract_id}`
+                window.location.href = url;
+            }
+        });
+
+        document.getElementById('toggleInputBlockButton').addEventListener('click', () => {
+            const inputBlock = document.getElementById('inputBlock');
+            const toggleButton = document.getElementById('toggleInputBlockButton');
+            inputBlock.style.display = 'block';
+            toggleButton.style.display = 'none';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Player</title>
+    <link rel="stylesheet" href="/static/css/mplayer_player.css">
+</head>
+<body>
+    <!-- Back button -->
+    <a href="/mplayer/{{ list_id }}" class="back-button">←</a>
+
+    <h1>Audio Player</h1>
+    <div style="font-size: medium;">Now Playing: <div id="title">Error</div></div>
+    <audio id="audioPlayer" controls autoplay>
+        <source id="audioSource" src="" type="audio/mpeg">
+        Your browser does not support HTML audio.
+    </audio>
+    <div>
+        <button id="previousButton" class="fancy-button">上一首</button>
+        <button id="nextButton" class="fancy-button">下一首</button>
+    </div>
+
+    <script>
+        const audioFiles = JSON.parse('{{ audio_files|tojson }}');
+        const sequence = JSON.parse('{{ seq|tojson }}'); 
+        const titles = {{ titles|tojson }};
+        let currentSeqIndex = -1;
+
+        const audioPlayer = document.getElementById('audioPlayer');
+        const audioSource = document.getElementById('audioSource');
+        const nextButton = document.getElementById('nextButton');
+        const previousButton = document.getElementById('previousButton');
+        const titleDiv = document.getElementById('title');
+
+        function createMediaMetadata(title) {
+            metadata = new MediaMetadata({
+                title: title,
+                artist: 'Earphone control enabled',
+                album: '{{ list_name }}',
+                artwork: [
+                    { src: 'https://via.placeholder.com/96', sizes: '96x96', type: 'image/png' },
+                    { src: 'https://via.placeholder.com/128', sizes: '128x128', type: 'image/png' },
+                    { src: 'https://via.placeholder.com/192', sizes: '192x192', type: 'image/png' }
+                ]
+            });
+            return metadata; 
+        }
+
+        function playAudio(seqIndex) {
+            audioSource.src = `/send_audio_file/${audioFiles[sequence[seqIndex]]}?list_id={{ list_id }}`;
+            audioPlayer.load();
+            audioPlayer.play();
+            
+            const curTitle = titles[sequence[seqIndex]]
+            titleDiv.textContent = curTitle; 
+            navigator.mediaSession.metadata = createMediaMetadata(curTitle); 
+        }
+
+        function playNext() {
+            currentSeqIndex++;
+            if (currentSeqIndex >= audioFiles.length) {
+                currentSeqIndex = 0;
+            }
+            playAudio(currentSeqIndex); 
+        }
+        function playPrevious() {
+            currentSeqIndex--; 
+            if (currentSeqIndex < 0) {
+                currentSeqIndex = audioFiles.length - 1; 
+            }
+            playAudio(currentSeqIndex); 
+        }
+
+        audioPlayer.addEventListener('ended', playNext);
+
+        nextButton.addEventListener('click', playNext);
+        previousButton.addEventListener('click', playPrevious);
+
+        // initial play
+        playNext();
+
+        // Media Session API
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('nexttrack', playNext);
+            navigator.mediaSession.setActionHandler('previoustrack', playPrevious);
+
+            navigator.mediaSession.metadata = createMediaMetadata(titles[sequence[currentSeqIndex]]);
+        }
+    </script>
+</body>
