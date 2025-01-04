@@ -37,12 +37,8 @@ class Config:
     # Music data path
     MUSIC_DATA_PATH = default_section.get("MUSIC_DATA_PATH")
 
-    # Youtube API key
-    YOUTUBE_API_KEY = default_section.get("YOUTUBE_API_KEY")
-
-
     # Check if any of the configuration parameters are missing
-    if HOST is None or PORT is None or USERNAME is None or PASSWORD is None or MUSIC_DATA_PATH is None or YOUTUBE_API_KEY is None:
+    if HOST is None or PORT is None or USERNAME is None or PASSWORD is None or MUSIC_DATA_PATH is None:
         raise ValueError("One or more configuration parameters are missing.")
 
     # Set default values

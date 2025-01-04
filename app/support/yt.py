@@ -1,8 +1,9 @@
 import json
 import requests
 
-from googleapiclient.discovery import build, HttpError
 import yt_dlp
+from googleapiclient.discovery import build, HttpError
+from yt_dlp import YoutubeDL
 
 from app.config import Config
 
@@ -30,9 +31,7 @@ class PlaylistInfo:
             json.dump(info, fp, indent=4)
         
 
-def get_yt_playlist_info(url_or_playlist_id: str, api_key: str = Config.YOUTUBE_API_KEY) -> PlaylistInfo | None:
-    youtube = build('youtube', 'v3', developerKey=api_key)
-
+def get_yt_playlist_info(url_or_playlist_id: str) -> PlaylistInfo | None:
     if '?' in url_or_playlist_id:
         # extract id
         args = url_or_playlist_id[url_or_playlist_id.index('?')+1:].split("&")
@@ -45,37 +44,25 @@ def get_yt_playlist_info(url_or_playlist_id: str, api_key: str = Config.YOUTUBE_
     else:
         playlist_id = url_or_playlist_id
 
-    # Get the name of the playlist
-    playlist_request = youtube.playlists().list(
-        part='snippet',
-        id=playlist_id
-    )
-    playlist_response = playlist_request.execute()
+    url = f"https://www.youtube.com/playlist?list={playlist_id}"
+
+    ydl_opts = {
+        'extract_flat': True,  # 僅擷取清單資訊而不下載影片
+    }
+    with YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
     
-    # Extract playlist name
-    playlist_title = playlist_response['items'][0]['snippet']['title']
+    if info is None:
+        return None
 
-    info = PlaylistInfo(playlist_title)
-    next_page_token = None
+    contents = []
+    for i, video in enumerate(info['entries'], start=1):
+        contents.append(VideoInfo(video['title'], video['id']))
 
-    while True:
-        request = youtube.playlistItems().list(
-            part='snippet',
-            playlistId=playlist_id,
-            # Retrieve up to 50 items at a time
-            pageToken=next_page_token
-        )
-        response = request.execute()
+    playlist_info = PlaylistInfo(info['title'])
+    playlist_info.contents = contents
 
-        for item in response['items']:
-            video_title = item['snippet']['title']
-            info.contents.append(VideoInfo(video_title, item['snippet']['resourceId']['videoId']))
-
-        next_page_token = response.get('nextPageToken')
-        if not next_page_token:
-            break
-
-    return info
+    return playlist_info
 
 def yt_download_audio(vid: str, filename: str, path: str, ext: str = "mp3"):
     ydl_opts = {
@@ -104,24 +91,4 @@ def check_playlist_accessibility(playlist_url):
             return True
     else:
         print(f"Failed to fetch the playlist. Status code: {response.status_code}")
-        return False
-
-def check_playlist_accessibility_by_api(playlist_id, api_key: str = Config.YOUTUBE_API_KEY) -> bool:
-    try:
-        youtube = build('youtube', 'v3', developerKey=api_key)
-        response = youtube.playlists().list(
-            part='id,snippet',
-            id=playlist_id
-        ).execute()
-        
-        if 'items' in response and len(response['items']) > 0:
-            playlist = response['items'][0]
-            title = playlist['snippet']['title']
-            print(f"Playlist is accessible. Title: {title}")
-            return True
-        else:
-            print("Playlist not found or not accessible.")
-            return False
-    except HttpError as e:
-        print(f"An error occurred: {e}")
         return False

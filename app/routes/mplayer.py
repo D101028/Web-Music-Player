@@ -42,11 +42,6 @@ def mplayer_fetch_progress():
 def create_list():
     if not check_auth():
         abort(403)
-    if Config.YOUTUBE_API_KEY == "":
-        return """
-<h1>Youtube API Key not set</h1>
-<meta http-equiv="refresh" content="3;url=/mplayer" />
-        """
 
     yt_playlist_id = request.args.get('yt_playlist_id')
     if yt_playlist_id in (None, ""):
@@ -64,11 +59,6 @@ def create_list():
 def update_list():
     if not check_auth():
         abort(403)
-    if Config.YOUTUBE_API_KEY == "":
-        return """
-<h1>Youtube API Key not set</h1>
-<meta http-equiv="refresh" content="3;url=/mplayer" />
-        """
 
     list_id = request.args.get('list_id')
     if list_id in (None, ""):
