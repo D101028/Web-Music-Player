@@ -5,6 +5,9 @@ from app.config import Config
 
 app = create_app()
 
+# Set maximum upload size
+app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024  # 1024 MB
+
 def init_data():
     if not os.path.isdir(Config.MUSIC_DATA_PATH):
         os.mkdir(Config.MUSIC_DATA_PATH)
