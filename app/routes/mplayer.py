@@ -192,3 +192,60 @@ def send_audio_file(filename):
         path = Config.MUSIC_DATA_PATH
 
     return send_from_directory(os.path.join(path, list_id), filename)
+
+@mplayer_bp.route('/upload_playlist', methods=['POST'])
+def upload_playlist():
+    if not check_auth():
+        abort(403)
+    if 'files' not in request.files:
+        return jsonify({"error": "No files part in the request"}), 400
+
+    files = request.files.getlist('files')  # 取得多個檔案
+    playlist_name = request.form.get('playlistName')  # 取得文字欄位
+
+    if not playlist_name:
+        return jsonify({"error": "Playlist name is required"}), 400
+
+    lists_json_path = os.path.join(Config.MUSIC_DATA_PATH, "lists.json")
+    with open(lists_json_path, "r") as fp:
+        lists_json = json.load(fp)
+    
+    upload_folder = os.path.join(Config.MUSIC_DATA_PATH, str(len(lists_json)))
+    if not os.path.isdir(upload_folder):
+        os.mkdir(upload_folder)
+
+    playlist_info = {
+        "name": playlist_name, 
+        "contents": []
+    }
+
+    skipped = 0
+    for index, file in enumerate(files):
+        if file.filename == '':
+            skipped += 1
+            continue  # 跳過沒有檔名的檔案
+        save_path = os.path.join(upload_folder, f"{index-skipped}.mp3")
+        try:
+            file.save(save_path)
+        except:
+            skipped += 1
+            continue
+
+        playlist_info["contents"].append({
+            "title": ".".join(file.filename.split(".")[:-1]), 
+            "vid": None
+        })
+    
+    with open(lists_json_path, "w") as fp:
+        lists_json.append({
+            "list-name": playlist_name, 
+            "pid": None
+        })
+        json.dump(lists_json, fp, indent=4)
+    
+    with open(os.path.join(upload_folder, "playlist.json"), mode="w") as fp:
+        json.dump(playlist_info, fp, indent=4)
+
+    return jsonify({
+        "message": f"Playlist '{playlist_name}' created successfully. Uploaded {len(files) - skipped} files"
+    }), 200

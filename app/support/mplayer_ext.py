@@ -4,6 +4,7 @@ import random
 import shutil
 import time
 from datetime import datetime
+from werkzeug.datastructures import FileStorage
 from threading import Thread
 
 from app.config import Config
@@ -87,6 +88,11 @@ def create_playlist(yt_playlist_id: str, xid: str | None = None):
     Progress.progress[xid]["done"] = total
 
 def update_playlist(list_id: str, to_remove = False, xid: str | None = None):
+    """
+    1. load playlist info
+    2. compare the info with old info, if not exist, download
+    3. if not to remove, copy the rest info
+    """
     list_id = int(list_id)
 
     total = 1
@@ -103,6 +109,12 @@ def update_playlist(list_id: str, to_remove = False, xid: str | None = None):
     if len(lists_info) <= list_id:
         return 1
         # raise IndexError(f"list_id out of range: {list_id}")
+
+    if lists_info[list_id]["pid"] is None: # created by upload
+        if xid is not None:
+            Progress.progress[xid]["total"] = 1
+            Progress.progress[xid]["done"] = 1
+        return 0
 
     # get playlist info
     info = get_yt_playlist_info(lists_info[list_id]["pid"])
@@ -209,6 +221,56 @@ def remove_playlist(list_id: int):
 
     return 0
 
+def create_playlist_by_upload(files: list[FileStorage], playlist_name: str, xid: str | None = None):
+    lists_json_path = os.path.join(Config.MUSIC_DATA_PATH, "lists.json")
+    with open(lists_json_path, "r") as fp:
+        lists_json = json.load(fp)
+    
+    upload_folder = os.path.join(Config.MUSIC_DATA_PATH, str(len(lists_json)))
+    if not os.path.isdir(upload_folder):
+        os.mkdir(upload_folder)
+
+    playlist_info = {
+        "name": playlist_name, 
+        "contents": []
+    }
+
+    if xid is not None:
+        Progress.progress[xid]["total"] = len(files) + 2
+        Progress.progress[xid]["done"] = 1
+
+    skipped = 0
+    for index, file in enumerate(files):
+        if file.filename == '':
+            skipped += 1
+            if xid is not None:
+                Progress.progress[xid]["done"] += 1
+            continue  # 跳過沒有檔名的檔案
+        save_path = os.path.join(upload_folder, f"{index-skipped}.mp3")
+        file.save(save_path)
+
+        playlist_info["contents"].append({
+            "title": ".".join(file.filename.split(".")[:-1]), 
+            "vid": None
+        })
+        if xid is not None:
+            Progress.progress[xid]["done"] += 1
+    
+    with open(lists_json_path, "w") as fp:
+        lists_json.append({
+            "list-name": playlist_name, 
+            "pid": None
+        })
+        json.dump(lists_json, fp, indent=4)
+    
+    with open(os.path.join(upload_folder, "playlist.json"), mode="w") as fp:
+        json.dump(playlist_info, fp, indent=4)
+    
+    if xid is not None:
+        Progress.progress[xid]["done"] = Progress.progress[xid]["total"]
+
+    return 0
+
 def threading_create_playlist(yt_playlist_id: str):
     xid = Progress.init_progress()
     t = Thread(target=create_playlist, args=(yt_playlist_id, xid))
@@ -233,4 +295,15 @@ def threading_update_playlist(list_id: str, to_remove: bool):
     t2.start()
     return xid
 
+def threading_create_playlist_by_upload(files: list[FileStorage], playlist_name: str):
+    xid = Progress.init_progress()
+    t = Thread(target=create_playlist_by_upload, args=(files, playlist_name, xid))
+    t.start()
+    def del_pro():
+        t.join()
+        time.sleep(60)
+        Progress.del_progress(xid)
+    t2 = Thread(target=del_pro)
+    t2.start()
+    return xid
 

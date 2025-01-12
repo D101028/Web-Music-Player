@@ -11,10 +11,22 @@
     <h1>Music Player</h1>
 
     <div class="input-block" id="inputBlock" style="display: none;">
-            <input type="text" id="newPlaylistName" placeholder="Enter YouTube playlist link or ID" />
-            <br>
-            <br>
-            <button id="addPlaylistButton">OK</button>
+        <div>By Files (.mp3 only): </div>
+        <br>
+        <input type="file" id="filesUpload" name="files" multiple accept=".mp3"/>
+        <br>
+        <input type="text" id="uploadName" placeholder="Enter name of playlist"/>
+        <br><br>
+        <button id="addPlaylistByUploadButton" onclick="uploadPlaylist();">Upload</button>
+        <br>
+        <div class="spinner" id="spinner" style="display: none;"></div>
+        <br><br>
+        
+        <div>By YouTube Playlist: </div>
+        <br>
+        <input type="text" id="newPlaylistName" placeholder="Enter YouTube playlist link or ID" />
+        <br><br>
+        <button id="addPlaylistButton">OK</button>
     </div>
     <button id="toggleInputBlockButton">Add Playlist</button>
 
@@ -44,6 +56,63 @@
             } else {
                 return url;
             }
+        }
+
+        function showSpinner() {
+            const spinner = document.getElementById('spinner');
+            spinner.style = "display: block; ";
+        }
+        function hideSpinner() {
+            const spinner = document.getElementById('spinner');
+            spinner.style = "display: none; "
+        }
+
+        async function uploadPlaylist() {
+            const filesInput = document.getElementById('filesUpload');
+            const nameInput = document.getElementById('uploadName');
+
+            showSpinner(); 
+
+            // 確保輸入內容有效
+            if (!filesInput.files.length) {
+                alert("Please select at least one file.");
+                hideSpinner(); 
+                return;
+            }
+
+            if (!nameInput.value.trim()) {
+                alert("Please enter a playlist name.");
+                hideSpinner(); 
+                return;
+            }
+
+            // 構建 FormData 物件
+            const formData = new FormData();
+            for (const file of filesInput.files) {
+                formData.append('files', file); // 多檔案上傳
+            }
+            formData.append('playlistName', nameInput.value); // 傳遞文字內容
+
+            try {
+                // 發送 POST 請求到後端
+                const response = await fetch('/upload_playlist', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`Upload successful: ${result.message}`);
+                } else {
+                    const error = await response.json();
+                    alert(`Error: ${error.message}`);
+                }
+            } catch (err) {
+                console.error("Upload failed", err);
+                alert("An error occurred during the upload.");
+            }
+            hideSpinner(); 
+            window.location.reload(); 
         }
         
         document.getElementById('addPlaylistButton').addEventListener('click', () => {

@@ -29,7 +29,6 @@ class PlaylistInfo:
         }
         with open(filepath, mode = "w") as fp:
             json.dump(info, fp, indent=4)
-        
 
 def get_yt_playlist_info(url_or_playlist_id: str) -> PlaylistInfo | None:
     if '?' in url_or_playlist_id:
