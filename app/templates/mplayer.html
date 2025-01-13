@@ -103,6 +103,7 @@
                 if (response.ok) {
                     const result = await response.json();
                     alert(`Upload successful: ${result.message}`);
+                    window.location.reload(); 
                 } else {
                     const error = await response.json();
                     alert(`Error: ${error.message}`);
@@ -112,7 +113,6 @@
                 alert("An error occurred during the upload.");
             }
             hideSpinner(); 
-            window.location.reload(); 
         }
         
         document.getElementById('addPlaylistButton').addEventListener('click', () => {
