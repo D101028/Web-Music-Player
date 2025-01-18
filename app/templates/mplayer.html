@@ -13,13 +13,15 @@
     <div class="input-block" id="inputBlock" style="display: none;">
         <div>By Files (.mp3 only): </div>
         <br>
-        <input type="file" id="filesUpload" name="files" multiple accept=".mp3"/>
+        <form enctype="multipart/form-data" onsubmit="uploadPlaylist(event)">
+            <input type="file" id="filesUpload" name="files" multiple accept=".mp3"/>
+            <br>
+            <input type="text" id="uploadName" placeholder="Enter name of playlist"/>
+            <br><br>
+            <input type="submit" value="Upload"/>
+        </form>
         <br>
-        <input type="text" id="uploadName" placeholder="Enter name of playlist"/>
-        <br><br>
-        <button id="addPlaylistByUploadButton" onclick="uploadPlaylist();">Upload</button>
-        <br>
-        <div class="spinner" id="spinner" style="display: none;"></div>
+        <div class="spinner" id="spinner"></div>
         <br><br>
         
         <div>By YouTube Playlist: </div>
@@ -36,6 +38,9 @@
     <script>
         const listsInfo = JSON.parse('{{ lists_info|tojson }}');
         const area = document.getElementById("playlists");
+        const spinner = document.getElementById('spinner');
+
+        let xhr = null; 
 
         for (let [index, value] of listsInfo.entries()) {
             const anchor = document.createElement('a');
@@ -59,15 +64,27 @@
         }
 
         function showSpinner() {
-            const spinner = document.getElementById('spinner');
-            spinner.style = "display: block; ";
+            spinner.style.display = "block";
         }
         function hideSpinner() {
-            const spinner = document.getElementById('spinner');
-            spinner.style = "display: none; "
+            spinner.style.display = "none"; 
         }
 
-        async function uploadPlaylist() {
+        function abortXhr(alert_cancelled = false) {
+            if (xhr != null) {
+                xhr.abort();
+                xhr = null; 
+                if (!alert_cancelled) alert("Stop uploading");
+                location.reload();
+            }
+        }
+        function uploadPlaylist(event) {
+            event.preventDefault();
+            if (xhr != null) {
+                alert("File is still uploading");
+                return ;
+            }
+
             const filesInput = document.getElementById('filesUpload');
             const nameInput = document.getElementById('uploadName');
 
@@ -93,26 +110,41 @@
             }
             formData.append('playlistName', nameInput.value); // 傳遞文字內容
 
-            try {
-                // 發送 POST 請求到後端
-                const response = await fetch('/upload_playlist', {
-                    method: 'POST',
-                    body: formData
-                });
+            xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload_playlist', true);
 
-                if (response.ok) {
-                    const result = await response.json();
-                    alert(`Upload successful: ${result.message}`);
-                    window.location.reload(); 
+            // var totalSize = null;
+            // var totalSizeStr = null;
+
+            // xhr.upload.onprogress = (event) => {
+            //     if (event.lengthComputable) {
+            //         if (totalSize === null) {
+            //             totalSize = event.total;
+            //             totalSizeStr = convertSize(totalSize);
+            //         }
+            //         var percentComplete = (event.loaded / totalSize) * 100;
+            //         document.getElementById('progress-bar').value = percentComplete;
+            //         document.getElementById('progress-text').textContent = percentComplete.toFixed(2) + "% " + convertSize(event.loaded) + "/" + totalSizeStr;
+            //         document.getElementById('progress-div').style.display = 'block';
+            //     }
+            // };
+
+            xhr.onload = () => {
+                if (xhr.status == 200) {
+                    alert('File successfully uploaded');
+                    abortXhr(true);
+                    hideSpinner(); 
+                    location.reload();
                 } else {
-                    const error = await response.json();
-                    alert(`Error: ${error.message}`);
+                    alert('Error uploading file: ' + xhr.statusText);
+                    abortXhr(true);
+                    hideSpinner(); 
                 }
-            } catch (err) {
-                console.error("Upload failed", err);
-                alert("An error occurred during the upload.");
-            }
-            hideSpinner(); 
+                // totalSize = null;
+                // totalSizeStr = null;
+            };
+
+            xhr.send(formData);
         }
         
         document.getElementById('addPlaylistButton').addEventListener('click', () => {
