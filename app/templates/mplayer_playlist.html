@@ -15,6 +15,9 @@
         <a href="/mplayer_update?list_id={{ list_id }}" class="update-button">Update Playlist</a>
         <br>
         <br>
+        <button id="toggleUploadFileBlockButton" class="toggle-upload-button">
+            Upload Files
+        </button>
         <div class="upload-block" id="uploadBlock" style="display: none;">
             <form enctype="multipart/form-data" onsubmit="uploadFiles(event)">
                 <input type="file" id="filesUpload" name="files" multiple accept=".mp3"/>
@@ -23,9 +26,6 @@
             </form>
             <div class="spinner" id="spinner"></div>
         </div>
-        <button id="toggleUploadFileBlockButton" class="toggle-upload-button">
-            Upload Files
-        </button>
         <br>
         <br>
         <a href="/mplayer/{{ list_id }}/play" class="play-button">▶️</a>

@@ -10,6 +10,7 @@
     <a href="/" class="link-button">Home</a>
     <h1>Music Player</h1>
 
+    <button id="toggleInputBlockButton">Add Playlist</button>
     <div class="input-block" id="inputBlock" style="display: none;">
         <div>By Files (.mp3 only): </div>
         <br>
@@ -30,7 +31,6 @@
         <br><br>
         <button id="addPlaylistButton">OK</button>
     </div>
-    <button id="toggleInputBlockButton">Add Playlist</button>
 
     <h2>Playlist</h2>
     <div id="playlists"></div>
@@ -41,6 +41,9 @@
         const spinner = document.getElementById('spinner');
 
         let xhr = null; 
+
+        const inputBlock = document.getElementById('inputBlock');
+        const toggleButton = document.getElementById('toggleInputBlockButton');
 
         for (let [index, value] of listsInfo.entries()) {
             const anchor = document.createElement('a');
@@ -162,10 +165,13 @@
         });
 
         document.getElementById('toggleInputBlockButton').addEventListener('click', () => {
-            const inputBlock = document.getElementById('inputBlock');
-            const toggleButton = document.getElementById('toggleInputBlockButton');
-            inputBlock.style.display = 'block';
-            toggleButton.style.display = 'none';
+            if (inputBlock.style.display === "none" || !inputBlock.style.display) {
+                inputBlock.style.display = "block";
+                toggleButton.textContent = "Hide";
+            } else {
+                inputBlock.style.display = "none";
+                toggleButton.textContent = "Add Playlist";
+            }
         });
     </script>
 </body>
