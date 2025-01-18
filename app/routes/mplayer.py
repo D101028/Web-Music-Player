@@ -198,13 +198,13 @@ def upload_playlist():
     if not check_auth():
         abort(403)
     if 'files' not in request.files:
-        return jsonify({"error": "No files part in the request"}), 400
+        return "No files part in the request", 400
 
     files = request.files.getlist('files')  # 取得多個檔案
     playlist_name = request.form.get('playlistName')  # 取得文字欄位
 
     if not playlist_name:
-        return jsonify({"error": "Playlist name is required"}), 400
+        return "Playlist name is required", 400
 
     lists_json_path = os.path.join(Config.MUSIC_DATA_PATH, "lists.json")
     with open(lists_json_path, "r") as fp:
@@ -246,6 +246,53 @@ def upload_playlist():
     with open(os.path.join(upload_folder, "playlist.json"), mode="w") as fp:
         json.dump(playlist_info, fp, indent=4)
 
-    return jsonify({
-        "message": f"Playlist '{playlist_name}' created successfully. Uploaded {len(files) - skipped} files"
-    }), 200
+    return f"Playlist '{playlist_name}' created successfully. Uploaded {len(files) - skipped} files", 200
+
+@mplayer_bp.route('/upload_files_to_playlist', methods=['POST'])
+def upload_files_to_playlist():
+    if not check_auth():
+        abort(403)
+
+    list_id = request.args.get('list_id')
+    if list_id in (None, ""):
+        return "wrong list_id", 400
+    
+    if 'files' not in request.files:
+        return "No files part in the request", 400
+    
+    files = request.files.getlist('files') 
+
+    lists_json_path = os.path.join(Config.MUSIC_DATA_PATH, "lists.json")
+    with open(lists_json_path, "r") as fp:
+        lists_json = json.load(fp)
+    if int(list_id) >= len(lists_json):
+        return "list_id not found", 400
+    
+    playlist_json_path = os.path.join(Config.MUSIC_DATA_PATH, list_id, "playlist.json")
+    with open(playlist_json_path, "r") as fp:
+        list_info = json.load(fp)
+
+    start = len(list_info["contents"])
+
+    skipped = 0
+    for index, file in enumerate(files):
+        if file.filename == '':
+            skipped += 1
+            continue
+        save_path = os.path.join(Config.MUSIC_DATA_PATH, list_id, f"{start + index - skipped}.mp3")
+        try:
+            file.save(save_path)
+        except:
+            skipped += 1
+            continue
+        list_info["contents"].append({
+            "title": ".".join(file.filename.split(".")[:-1]), 
+            "vid": None
+        })
+    
+    with open(playlist_json_path, "w") as fp:
+        json.dump(list_info, fp, indent=4)
+    
+    return f"Upload successfully. Uploaded {len(files) - skipped} files", 200
+
+

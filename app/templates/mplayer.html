@@ -131,12 +131,14 @@
 
             xhr.onload = () => {
                 if (xhr.status == 200) {
-                    alert('File successfully uploaded');
-                    abortXhr(true);
                     hideSpinner(); 
+                    alert('File successfully uploaded');
+                    alert(xhr.responseText);
+                    abortXhr(true);
                     location.reload();
                 } else {
                     alert('Error uploading file: ' + xhr.statusText);
+                    alert(xhr.responseText);
                     abortXhr(true);
                     hideSpinner(); 
                 }
