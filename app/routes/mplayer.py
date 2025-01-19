@@ -83,6 +83,12 @@ def playlist_page(list_id):
     if not check_auth():
         abort(403)
     
+    if not os.path.isdir(os.path.join(Config.MUSIC_DATA_PATH, list_id)):
+        return redirect('/')
+    
+    if not os.path.isfile(os.path.join(Config.MUSIC_DATA_PATH, list_id, "playlist.json")):
+        return redirect('/')
+    
     # load list info
     with open(os.path.join(Config.MUSIC_DATA_PATH, list_id, "playlist.json"), "rb") as fp:
         list_info = json.load(fp)
