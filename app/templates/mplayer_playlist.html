@@ -28,6 +28,9 @@
         </div>
         <br>
         <br>
+        <button id="deletePlaylistButton" class="delete-playlist-button">Delete Playlist</button>
+        <br>
+        <br>
         <a href="/mplayer/{{ list_id }}/play" class="play-button">▶️</a>
     </div>
 
@@ -55,6 +58,7 @@
     <script>
         const uploadBlock = document.getElementById("uploadBlock");
         const toggleUploadFileBlockButton = document.getElementById("toggleUploadFileBlockButton");
+        const deletePlaylistButton = document.getElementById("deletePlaylistButton");
 
         const filesInput = document.getElementById('filesUpload');
         const spinner = document.getElementById('spinner');
@@ -69,6 +73,21 @@
                 toggleUploadFileBlockButton.textContent = "Upload Files";
             }
         }); 
+
+        deletePlaylistButton.addEventListener("click", () => {
+            if (confirm("Are you sure you want to delete this playlist?")) {
+                fetch(`/mplayer_delete_playlist?list_id={{ list_id }}`, {method: "POST"})
+                    .then( (response) => {
+                        if (response.status === 200) {
+                            alert('delete playlist successfully');
+                            location.href = "/mplayer";
+                        } else {
+                            response.text().then((text) => alert(text));
+                        }
+                    } )
+                    .catch( (error) => alert(error) );
+            }
+        })
 
         function showSpinner() {
             spinner.style.display = "block";

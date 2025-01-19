@@ -295,4 +295,28 @@ def upload_files_to_playlist():
     
     return f"Upload successfully. Uploaded {len(files) - skipped} files", 200
 
-
+@mplayer_bp.route('/mplayer_delete_playlist', methods=['POST'])
+def delete_playmplayer_delete_playlistlist():
+    if not check_auth():
+        abort(403)
+    
+    list_id = request.args.get('list_id')
+    if list_id in (None, ""):
+        return "wrong list_id", 400
+    
+    lists_json_path = os.path.join(Config.MUSIC_DATA_PATH, "lists.json")
+    with open(lists_json_path, "r") as fp:
+        lists_json = json.load(fp)
+    if int(list_id) >= len(lists_json):
+        return "list_id not found", 400
+    
+    del lists_json[int(list_id)]
+    with open(lists_json_path, "w") as fp:
+        json.dump(lists_json, fp, indent=4)
+    
+    folder = os.path.join(Config.MUSIC_DATA_PATH, list_id)
+    if os.path.isdir(folder):
+        import shutil
+        shutil.rmtree(folder)
+    
+    return "Delete successfully", 200
