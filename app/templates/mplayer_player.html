@@ -19,10 +19,13 @@
         <button id="nextButton" class="fancy-button">下一首</button>
     </div>
 
+    <script id="titles-data" type="application/json">
+    {{ titles|tojson }}
+    </script>
     <script>
         const audioFiles = JSON.parse('{{ audio_files|tojson }}');
         const sequence = JSON.parse('{{ seq|tojson }}'); 
-        const titles = {{ titles|tojson }};
+        const titles = JSON.parse(document.getElementById('titles-data').textContent);
         let currentSeqIndex = -1;
 
         const audioPlayer = document.getElementById('audioPlayer');
