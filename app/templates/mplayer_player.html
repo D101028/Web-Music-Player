@@ -18,13 +18,18 @@
         <button id="previousButton" class="fancy-button">上一首</button>
         <button id="nextButton" class="fancy-button">下一首</button>
     </div>
-
+    <script id="audio-files-data" type="application/json">
+    {{ audio_files|tojson | safe }}
+    </script>
+    <script id="seq-data" type="application/json">
+    {{ seq|tojson | safe }}
+    </script>
     <script id="titles-data" type="application/json">
-    {{ titles|tojson }}
+    {{ titles|tojson | safe }}
     </script>
     <script>
-        const audioFiles = JSON.parse('{{ audio_files|tojson }}');
-        const sequence = JSON.parse('{{ seq|tojson }}'); 
+        const audioFiles = JSON.parse(document.getElementById('audio-files-data').textContent);
+        const sequence = JSON.parse(document.getElementById('seq-data').textContent); 
         const titles = JSON.parse(document.getElementById('titles-data').textContent);
         let currentSeqIndex = -1;
 
