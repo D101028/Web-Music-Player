@@ -23,4 +23,4 @@ if __name__ == '__main__':
     init_data()
     # print(f">> Starting Server on {Config.HOST}:{Config.PORT} <<")
     # serve(app, host=Config.HOST, port=Config.PORT)
-    app.run(Config.HOST, Config.PORT)
+    app.run(host=Config.HOST, port=Config.PORT, debug=True)
