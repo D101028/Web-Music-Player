@@ -21,5 +21,5 @@ def init_data():
 
 if __name__ == '__main__':
     init_data()
-    print(">> Starting Server <<")
+    print(f">> Starting Server on {Config.HOST}:{Config.PORT} <<")
     serve(app, host=Config.HOST, port=Config.PORT)
