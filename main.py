@@ -1,3 +1,4 @@
+import logging
 import os
 
 from waitress import serve
@@ -21,6 +22,7 @@ def init_data():
 
 if __name__ == '__main__':
     init_data()
-    print(f">> Starting Server on {Config.HOST}:{Config.PORT} <<")
+    logging.basicConfig(level=logging.INFO)
+    logging.info(f">> Starting Server on {Config.HOST}:{Config.PORT} <<")
     serve(app, host=Config.HOST, port=Config.PORT)
     # app.run(Config.HOST, Config.PORT)
