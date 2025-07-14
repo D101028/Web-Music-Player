@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template, request, session, flash, redirect
 
 from app.config import Config
+from app.support.filter import browser_only
 
 auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@browser_only
 def login():
     if request.method == 'POST' and Config.USERNAME != "" and Config.PASSWORD != "":
         username = request.form['username']
@@ -20,6 +22,7 @@ def login():
     return render_template('login.html')
 
 @auth_bp.route('/logout')
+@browser_only
 def logout():
     session.pop('username', None)
     flash('You have been logged out', 'success')

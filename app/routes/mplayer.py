@@ -6,13 +6,15 @@ from flask import Blueprint, render_template, request, redirect, send_from_direc
 from urllib.parse import unquote
 
 from app.config import Config
-from app.support.user import check_auth
+from app.support.filter import browser_only
 from app.support.mplayer_ext import Progress, threading_create_playlist, threading_update_playlist
+from app.support.user import check_auth
 from app.support.yt import check_playlist_accessibility
 
 mplayer_bp = Blueprint('mplayer', __name__)
 
 @mplayer_bp.route('/mplayer')
+@browser_only
 def mplayer():
     if not check_auth():
         abort(403)
@@ -28,6 +30,7 @@ def mplayer():
     return render_template("mplayer.html", lists_info = lists_info)
 
 @mplayer_bp.route('/mplayer_fetch_progress')
+@browser_only
 def mplayer_fetch_progress():
     if not check_auth():
         abort(403)
@@ -39,6 +42,7 @@ def mplayer_fetch_progress():
     return jsonify({"percentage": Progress.get_progress(xid)})
 
 @mplayer_bp.route('/mplayer_create')
+@browser_only
 def create_list():
     if not check_auth():
         abort(403)
@@ -56,6 +60,7 @@ def create_list():
                            redir_href = "/mplayer")
 
 @mplayer_bp.route('/mplayer_update')
+@browser_only
 def update_list():
     if not check_auth():
         abort(403)
@@ -79,6 +84,7 @@ def update_list():
                            redir_href = f"/mplayer/{list_id}")
 
 @mplayer_bp.route('/mplayer/<list_id>')
+@browser_only
 def playlist_page(list_id):
     if not check_auth():
         abort(403)
@@ -98,6 +104,7 @@ def playlist_page(list_id):
                            total = len(list_info["contents"]), enumerate = enumerate)
 
 @mplayer_bp.route('/mplayer/<list_id>/play')
+@browser_only
 def play_id(list_id):
     if not check_auth():
         abort(403)
@@ -121,6 +128,7 @@ def play_id(list_id):
                            audio_files = audio_files, seq = seq, titles = titles)
 
 @mplayer_bp.route('/mplayer/play_single_song')
+@browser_only
 def play_single_song():
     if not check_auth():
         abort(403)
@@ -148,6 +156,7 @@ def play_single_song():
                            titles = [list_info["contents"][int(song_id)]["title"]])
 
 @mplayer_bp.route('/mplayer_rename_song', methods=['POST'])
+@browser_only
 def mplayer_rename_song():
     if not check_auth():
         abort(403)
@@ -181,6 +190,7 @@ def mplayer_rename_song():
     return "rename successfully", 200
 
 @mplayer_bp.route('/send_audio_file/<filename>')
+@browser_only
 def send_audio_file(filename):
     if not check_auth():
         abort(403)
@@ -200,6 +210,7 @@ def send_audio_file(filename):
     return send_from_directory(os.path.join(path, list_id), filename)
 
 @mplayer_bp.route('/upload_playlist', methods=['POST'])
+@browser_only
 def upload_playlist():
     if not check_auth():
         abort(403)
@@ -255,6 +266,7 @@ def upload_playlist():
     return f"Playlist '{playlist_name}' created successfully. Uploaded {len(files) - skipped} files", 200
 
 @mplayer_bp.route('/upload_files_to_playlist', methods=['POST'])
+@browser_only
 def upload_files_to_playlist():
     if not check_auth():
         abort(403)
@@ -302,6 +314,7 @@ def upload_files_to_playlist():
     return f"Upload successfully. Uploaded {len(files) - skipped} files", 200
 
 @mplayer_bp.route('/mplayer_delete_playlist', methods=['POST'])
+@browser_only
 def delete_playmplayer_delete_playlistlist():
     if not check_auth():
         abort(403)

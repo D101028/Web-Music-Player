@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template, redirect, send_file
 
+from app.support.filter import browser_only
 from app.support.user import check_auth
 
 home_bp = Blueprint('home', __name__)
 
 @home_bp.route('/')
+@browser_only
 def home():
     if check_auth():
         return render_template('index.html')
