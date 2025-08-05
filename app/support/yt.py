@@ -96,10 +96,10 @@ def yt_download_audio(vid: str, basename: str, dest: str, ext: str = "mp3"):
     url = f"https://www.youtube.com/watch?v={vid}"
     cmd = ["yt-dlp", 
            "-f", "bestaudio", 
-           "--ffmpeg-location", f'"{Config.FFMPEG_LOCATION}"', 
+           "--ffmpeg-location", Config.FFMPEG_LOCATION, 
            "--extract-audio", 
            "-o", "temp", 
-           f'{url}']
+           url]
     process = Popen(cmd, cwd=temp_dir)
     status = process.wait()
     if status:
@@ -116,7 +116,7 @@ def yt_download_audio(vid: str, basename: str, dest: str, ext: str = "mp3"):
     # Convert to target form
     input_path = os.path.abspath(os.path.join(temp_dir, file))
     output_path = os.path.abspath(os.path.join(dest, f"{basename}.{ext}"))
-    cmd = ["/bin/ffmpeg", "-i", f'"{input_path}"', "-y", f'"{output_path}"']
+    cmd = [os.path.join(Config.FFMPEG_LOCATION, "ffmpeg"), "-i", input_path, "-y", output_path]
     process = Popen(cmd, cwd=dest)
     status = process.wait()
     if status:
