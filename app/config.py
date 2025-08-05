@@ -37,14 +37,19 @@ class Config:
     # Music data path
     MUSIC_DATA_PATH = default_section.get("MUSIC_DATA_PATH")
 
-    # Check if any of the configuration parameters are missing
-    if HOST is None or PORT is None or USERNAME is None or PASSWORD is None or MUSIC_DATA_PATH is None:
-        raise ValueError("One or more configuration parameters are missing.")
+    # FFmpeg location
+    FFMPEG_LOCATION = default_section.get("FFMPEG_LOCATION")
 
     # Set default values
-    if HOST == "":
+    if not HOST:
         HOST = "localhost"
-    if PORT == "":
+    if not PORT:
         PORT = "5000"
-    if MUSIC_DATA_PATH == "":
+    if not USERNAME:
+        USERNAME = ""
+    if not PASSWORD:
+        PASSWORD = ""
+    if not MUSIC_DATA_PATH:
         MUSIC_DATA_PATH = "./data"
+    if not FFMPEG_LOCATION:
+        FFMPEG_LOCATION = "/usr/bin"

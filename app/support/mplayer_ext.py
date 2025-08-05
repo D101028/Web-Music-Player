@@ -79,8 +79,8 @@ def create_playlist(yt_playlist_id: str, xid: str | None = None):
 
     # create/download playlist data
     for i, video_info in enumerate(info.contents):
-        filename = str(i)
-        yt_download_audio(video_info.vid, filename, pl_dirpath)
+        basename = str(i)
+        yt_download_audio(video_info.vid, basename, pl_dirpath)
         if xid is not None:
             Progress.progress[xid]["done"] += 1
     info.dumps(os.path.join(pl_dirpath, "playlist.json"))
