@@ -1,24 +1,27 @@
 import json
 import os
-import random
 import shutil
 import time
+import zipfile
 from datetime import datetime
 from werkzeug.datastructures import FileStorage
 from threading import Thread
+from typing import TypedDict
 
-from app.config import Config
-from app.support.yt import get_yt_playlist_info, yt_download_audio, PlaylistInfo, VideoInfo
+from ..config import Config
+from .yt import get_yt_playlist_info, yt_download_audio, PlaylistInfo, VideoInfo
+
+SingleProgressDict = TypedDict('SingleProgressDict', {
+    'total': int | None, 
+    'done': int
+})
 
 class Progress:
-    progress = {}
+    progress: dict[str, SingleProgressDict] = {}
 
     @classmethod
     def init_progress(cls, total: int | None = None, done: int = 0) -> str:
-        xid = ""
-        for _ in range(5):
-            xid += random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-        xid += datetime.now().strftime("%Y%m%d%H%M%S")
+        xid = os.urandom(24).hex()
         cls.progress[xid] = {"total": total, "done": done}
         return xid
     
@@ -27,7 +30,10 @@ class Progress:
         progress = cls.progress[xid]
         if progress.get("total") is None:
             return 0
-        result = int(progress["done"] / progress["total"] * 100)
+        total = progress["total"]
+        if not total:
+            return 0
+        result = int(progress["done"] / total * 100)
         return result
 
     @classmethod
@@ -84,8 +90,8 @@ def create_playlist(yt_playlist_id: str, xid: str | None = None):
         if xid is not None:
             Progress.progress[xid]["done"] += 1
     info.dumps(os.path.join(pl_dirpath, "playlist.json"))
-
-    Progress.progress[xid]["done"] = total
+    if xid is not None:
+        Progress.progress[xid]["done"] = total
 
 def update_playlist(list_id, to_remove = False, xid: str | None = None):
     """
@@ -181,7 +187,7 @@ def update_playlist(list_id, to_remove = False, xid: str | None = None):
     else:
         # update progress
         if xid is not None:
-            Progress.progress[xid]["done"] = Progress.progress[xid]["total"] - 1
+            Progress.progress[xid]["done"] = Progress.progress[xid]["total"] - 1 # type: ignore
 
     # save changes to json
     if new_info.name != lists_info[list_id]["list-name"]:
@@ -194,7 +200,7 @@ def update_playlist(list_id, to_remove = False, xid: str | None = None):
 
     # update progress
     if xid is not None:
-        Progress.progress[xid]["done"] = Progress.progress[xid]["total"]
+        Progress.progress[xid]["done"] = Progress.progress[xid]["total"] # type: ignore
     return 0
 
 def remove_playlist(list_id: int):
@@ -267,11 +273,11 @@ def create_playlist_by_upload(files: list[FileStorage], playlist_name: str, xid:
         json.dump(playlist_info, fp, indent=4)
     
     if xid is not None:
-        Progress.progress[xid]["done"] = Progress.progress[xid]["total"]
+        Progress.progress[xid]["done"] = Progress.progress[xid]["total"] # type: ignore
 
     return 0
 
-def threading_create_playlist(yt_playlist_id: str):
+def threading_create_playlist(yt_playlist_id: str) -> str:
     xid = Progress.init_progress()
     t = Thread(target=create_playlist, args=(yt_playlist_id, xid))
     t.start()
@@ -283,7 +289,7 @@ def threading_create_playlist(yt_playlist_id: str):
     t2.start()
     return xid
 
-def threading_update_playlist(list_id: str, to_remove: bool):
+def threading_update_playlist(list_id: str, to_remove: bool) -> str:
     xid = Progress.init_progress()
     t = Thread(target=update_playlist, args=(list_id, to_remove, xid))
     t.start()
@@ -295,7 +301,7 @@ def threading_update_playlist(list_id: str, to_remove: bool):
     t2.start()
     return xid
 
-def threading_create_playlist_by_upload(files: list[FileStorage], playlist_name: str):
+def threading_create_playlist_by_upload(files: list[FileStorage], playlist_name: str) -> str:
     xid = Progress.init_progress()
     t = Thread(target=create_playlist_by_upload, args=(files, playlist_name, xid))
     t.start()
@@ -307,3 +313,28 @@ def threading_create_playlist_by_upload(files: list[FileStorage], playlist_name:
     t2.start()
     return xid
 
+def compress_folder_to_zip(folder_path: str, zip_path: str, xid: str):
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(folder_path):
+            for file in files:
+                abs_path = os.path.join(root, file)
+                rel_path = os.path.relpath(abs_path, folder_path)
+                zipf.write(abs_path, rel_path)
+                Progress.progress[xid]["done"] += 1
+
+def threading_compress_data(folder_path: str, zip_path: str) -> str:
+    xid = Progress.init_progress()
+    total = 0
+    for root, _, files in os.walk(folder_path):
+        total += len(files)
+    
+    Progress.progress[xid]["total"] = total
+    t = Thread(target=compress_folder_to_zip, args=(folder_path, zip_path, xid))
+    t.start()
+    def del_pro():
+        t.join()
+        time.sleep(60)
+        Progress.del_progress(xid)
+    t2 = Thread(target=del_pro)
+    t2.start()
+    return xid

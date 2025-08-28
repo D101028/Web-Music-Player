@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, session, flash, redirect
 
-from app.config import Config
-from app.support.filter import browser_only
+from ..config import Config
+from ..support.filter import browser_only
 
 auth_bp = Blueprint('auth', __name__)
 

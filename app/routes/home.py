@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, send_file
 
-from app.support.filter import browser_only
-from app.support.user import check_auth
+from ..support.filter import browser_only
+from ..support.user import check_auth
 
 home_bp = Blueprint('home', __name__)
 

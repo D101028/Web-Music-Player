@@ -8,8 +8,9 @@
 </head>
 <body>
     <a href="/" class="link-button">Home</a>
-    <h1>Music Player</h1>
-
+    
+    <br>
+    
     <button id="toggleInputBlockButton">Add Playlist</button>
     <div class="input-block" id="inputBlock" style="display: none;">
         <div>By Files (.mp3 only): </div>
@@ -30,6 +31,49 @@
         <input type="text" id="newPlaylistName" placeholder="Enter YouTube playlist link or ID" />
         <br><br>
         <button id="addPlaylistButton">OK</button>
+    </div>
+
+    <br>
+
+    <div class="compressed-data-block">
+        <a class="compress-data-button" href="/compress_data">Compress Data</a>
+        <label for="compressedDataSelect">Compressed Files: </label>
+        <select id="compressedDataSelect">
+            {% for filename in compressed_data_list %}
+                <option>{{ filename }}</option>
+            {% endfor %}
+        </select>
+        <div class="btns-block">
+            <button id="downloadCompressedBtn">Download</button>
+            <button id="deleteCompressedBtn">Delete</button>
+        </div>
+        <script>
+            document.getElementById('downloadCompressedBtn').onclick = function() {
+                const select = document.getElementById('compressedDataSelect');
+                const url = `/download_compressed_data?filename=${select.options[select.selectedIndex].text}`;
+                if (url) {
+                    window.location.href = url;
+                }
+            };
+            document.getElementById('deleteCompressedBtn').onclick = function() {
+                const select = document.getElementById('compressedDataSelect');
+                const filename = select.options[select.selectedIndex].text;
+                fetch(`/delete_compressed_data?filename=${filename}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('Error: ' + error);
+                });
+            };
+        </script>
     </div>
 
     <h2>Playlist</h2>

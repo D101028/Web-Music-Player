@@ -19,10 +19,11 @@ def init_data():
             file.write("[]")
     if not os.path.isdir(Config.MUSIC_DATA_PATH):
         os.mkdir(Config.MUSIC_DATA_PATH)
+    if not os.path.isdir(Config.COMPRESSED_DATA_PATH):
+        os.mkdir(Config.COMPRESSED_DATA_PATH)
 
 if __name__ == '__main__':
     init_data()
     logging.basicConfig(level=logging.INFO)
     logging.info(f">> Starting Server on {Config.HOST}:{Config.PORT} <<")
     serve(app, host=Config.HOST, port=Config.PORT)
-    # app.run(Config.HOST, Config.PORT)

@@ -6,7 +6,7 @@ from subprocess import Popen
 
 from yt_dlp import YoutubeDL
 
-from app.config import Config
+from ..config import Config
 
 class VideoInfo:
     def __init__(self, title: str, vid: str):

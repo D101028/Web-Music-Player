@@ -32,6 +32,7 @@ class Config:
     PASSWORD: str
     MUSIC_DATA_PATH: str
     FFMPEG_LOCATION: str
+    COMPRESSED_DATA_PATH: str
 
     # Flask configuration
     _HOST = default_section.get("HOST")
@@ -43,6 +44,7 @@ class Config:
 
     # Music data path
     _MUSIC_DATA_PATH = default_section.get("MUSIC_DATA_PATH")
+    _COMPRESSED_DATA_PATH = default_section.get("COMPRESSED_DATA_PATH")
 
     # FFmpeg location
     _FFMPEG_LOCATION = default_section.get("FFMPEG_LOCATION")
@@ -72,3 +74,7 @@ class Config:
         FFMPEG_LOCATION = "/usr/bin"
     else:
         FFMPEG_LOCATION = _FFMPEG_LOCATION
+    if not _COMPRESSED_DATA_PATH:
+        COMPRESSED_DATA_PATH = "./.compressed"
+    else:
+        COMPRESSED_DATA_PATH = _COMPRESSED_DATA_PATH

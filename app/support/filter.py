@@ -1,6 +1,8 @@
 from functools import wraps
 from flask import request, abort
 
+from .user import check_auth
+
 def browser_only(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -29,3 +31,12 @@ def browser_only(f):
 
         return f(*args, **kwargs)
     return decorated_function
+
+def logged_in_only(f):
+    @wraps(f)
+    def inner(*args, **kwargs):
+        if not check_auth():
+            abort(403)
+        return f(*args, **kwargs)
+    return inner
+

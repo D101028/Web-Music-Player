@@ -1,24 +1,25 @@
 import json
 import os
 import random
+from datetime import datetime
 
-from flask import Blueprint, render_template, request, redirect, send_from_directory, abort, jsonify
+from flask import Blueprint, render_template, request, redirect, send_from_directory, abort, jsonify, send_file
 from urllib.parse import unquote
 
-from app.config import Config
-from app.support.filter import browser_only
-from app.support.mplayer_ext import Progress, threading_create_playlist, threading_update_playlist
-from app.support.user import check_auth
-from app.support.yt import check_playlist_accessibility
+from ..config import Config
+from ..support.mplayer_ext import threading_compress_data
+from ..support.filter import browser_only, logged_in_only
+from ..support.mplayer_ext import Progress, threading_create_playlist, threading_update_playlist
+from ..support.yt import check_playlist_accessibility
+
+COMPRESSED_DATA_PATERN = "%Y-%m-%d-%H-%M-%S"
 
 mplayer_bp = Blueprint('mplayer', __name__)
 
 @mplayer_bp.route('/mplayer')
 @browser_only
+@logged_in_only
 def mplayer():
-    if not check_auth():
-        abort(403)
-    
     # load lists data
     lists_json_path = os.path.join(Config.MUSIC_DATA_PATH, "lists.json")
     if not os.path.isfile(lists_json_path):
@@ -27,14 +28,19 @@ def mplayer():
         with open(lists_json_path, mode="rb") as file:
             lists_info: list[dict] = json.load(file)
     
-    return render_template("mplayer.html", lists_info = lists_info)
+    compressed_data_list: list[str]
+    for root, _, files in os.walk(Config.COMPRESSED_DATA_PATH):
+        compressed_data_list = sorted(
+            files, key=lambda f: datetime.strptime(f, f"{COMPRESSED_DATA_PATERN}.zip"), reverse=True
+        )
+        break
+
+    return render_template("mplayer.html", lists_info = lists_info, compressed_data_list = compressed_data_list)
 
 @mplayer_bp.route('/mplayer_fetch_progress')
 @browser_only
+@logged_in_only
 def mplayer_fetch_progress():
-    if not check_auth():
-        abort(403)
-    
     xid = request.args.get('xid')
     if xid in (None, ""):
         return jsonify({"percentage": 0})
@@ -43,10 +49,8 @@ def mplayer_fetch_progress():
 
 @mplayer_bp.route('/mplayer_create')
 @browser_only
+@logged_in_only
 def create_list():
-    if not check_auth():
-        abort(403)
-
     yt_playlist_id = request.args.get('yt_playlist_id')
     if yt_playlist_id in (None, ""):
         return redirect('/')
@@ -61,10 +65,8 @@ def create_list():
 
 @mplayer_bp.route('/mplayer_update')
 @browser_only
+@logged_in_only
 def update_list():
-    if not check_auth():
-        abort(403)
-
     list_id = request.args.get('list_id')
     if list_id in (None, ""):
         return redirect('/')
@@ -85,10 +87,8 @@ def update_list():
 
 @mplayer_bp.route('/mplayer/<list_id>')
 @browser_only
+@logged_in_only
 def playlist_page(list_id):
-    if not check_auth():
-        abort(403)
-    
     if not os.path.isdir(os.path.join(Config.MUSIC_DATA_PATH, list_id)):
         return redirect('/')
     
@@ -105,10 +105,8 @@ def playlist_page(list_id):
 
 @mplayer_bp.route('/mplayer/<list_id>/play')
 @browser_only
+@logged_in_only
 def play_id(list_id):
-    if not check_auth():
-        abort(403)
-    
     # load list info
     with open(os.path.join(Config.MUSIC_DATA_PATH, list_id, "playlist.json"), "rb") as fp:
         list_info = json.load(fp)
@@ -129,10 +127,8 @@ def play_id(list_id):
 
 @mplayer_bp.route('/mplayer/play_single_song')
 @browser_only
+@logged_in_only
 def play_single_song():
-    if not check_auth():
-        abort(403)
-    
     list_id = request.args.get('list_id')
     if list_id in (None, ""):
         return redirect('/')
@@ -157,10 +153,8 @@ def play_single_song():
 
 @mplayer_bp.route('/mplayer_rename_song', methods=['POST'])
 @browser_only
+@logged_in_only
 def mplayer_rename_song():
-    if not check_auth():
-        abort(403)
-    
     list_id = request.args.get('list_id')
     if list_id in (None, ""):
         return "wrong list_id", 400
@@ -191,10 +185,8 @@ def mplayer_rename_song():
 
 @mplayer_bp.route('/send_audio_file/<filename>')
 @browser_only
+@logged_in_only
 def send_audio_file(filename):
-    if not check_auth():
-        abort(403)
-    
     list_id = request.args.get('list_id')
     if list_id in (None, ""):
         return redirect('/')
@@ -211,9 +203,8 @@ def send_audio_file(filename):
 
 @mplayer_bp.route('/upload_playlist', methods=['POST'])
 @browser_only
+@logged_in_only
 def upload_playlist():
-    if not check_auth():
-        abort(403)
     if 'files' not in request.files:
         return "No files part in the request", 400
 
@@ -267,10 +258,8 @@ def upload_playlist():
 
 @mplayer_bp.route('/upload_files_to_playlist', methods=['POST'])
 @browser_only
+@logged_in_only
 def upload_files_to_playlist():
-    if not check_auth():
-        abort(403)
-
     list_id = request.args.get('list_id')
     if list_id in (None, ""):
         return "wrong list_id", 400
@@ -315,10 +304,8 @@ def upload_files_to_playlist():
 
 @mplayer_bp.route('/mplayer_delete_playlist', methods=['POST'])
 @browser_only
+@logged_in_only
 def delete_playmplayer_delete_playlistlist():
-    if not check_auth():
-        abort(403)
-    
     list_id = request.args.get('list_id')
     if list_id in (None, ""):
         return "wrong list_id", 400
@@ -339,3 +326,50 @@ def delete_playmplayer_delete_playlistlist():
         shutil.rmtree(folder)
     
     return "Delete successfully", 200
+
+@mplayer_bp.route('/compress_data')
+@browser_only
+@logged_in_only
+def compress_data():
+    folder_path = Config.MUSIC_DATA_PATH
+    timestamp = datetime.now().strftime(COMPRESSED_DATA_PATERN)
+    zip_path = os.path.join(Config.COMPRESSED_DATA_PATH, f"{timestamp}.zip")
+    xid = threading_compress_data(folder_path, zip_path)
+
+    return render_template("mplayer_progress.html", 
+                           fetch_progress_url = f"/mplayer_fetch_progress?xid={xid}", 
+                           redir_href = f"/mplayer")
+
+@mplayer_bp.route('/download_compressed_data')
+@browser_only
+@logged_in_only
+def download_compressed_data():
+    filename = request.args.get('filename')
+    if filename is None:
+        abort(404)
+    file_path = os.path.join(Config.COMPRESSED_DATA_PATH, filename)
+    if not os.path.abspath(file_path).startswith(os.path.abspath(Config.COMPRESSED_DATA_PATH) + os.sep):
+        abort(403)
+    file_path = os.path.abspath(file_path)
+    if not os.path.isfile(file_path):
+        abort(404)
+    return send_file(file_path)
+
+@mplayer_bp.route('/delete_compressed_data', methods=['POST'])
+@browser_only
+@logged_in_only
+def delete_compressed_data():
+    filename = request.args.get('filename')
+    if filename is None:
+        abort(404)
+    file_path = os.path.join(Config.COMPRESSED_DATA_PATH, filename)
+    if not os.path.abspath(file_path).startswith(os.path.abspath(Config.COMPRESSED_DATA_PATH) + os.sep):
+        abort(403)
+    file_path = os.path.abspath(file_path)
+    if not os.path.isfile(file_path):
+        abort(404)
+    try:
+        os.remove(file_path)
+    except Exception:
+        abort(500)
+    return "File deleted successfully", 200
