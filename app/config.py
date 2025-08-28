@@ -26,30 +26,49 @@ config.read(config_path)
 default_section = config["DEFAULT"]
 
 class Config:
+    HOST: str
+    PROT: str
+    USERNAME: str
+    PASSWORD: str
+    MUSIC_DATA_PATH: str
+    FFMPEG_LOCATION: str
+
     # Flask configuration
-    HOST = default_section.get("HOST")
-    PORT = default_section.get("PORT")
+    _HOST = default_section.get("HOST")
+    _PORT = default_section.get("PORT")
 
     # Authentication
-    USERNAME = default_section.get("USERNAME")
-    PASSWORD = default_section.get("PASSWORD")
+    _USERNAME = default_section.get("USERNAME")
+    _PASSWORD = default_section.get("PASSWORD")
 
     # Music data path
-    MUSIC_DATA_PATH = default_section.get("MUSIC_DATA_PATH")
+    _MUSIC_DATA_PATH = default_section.get("MUSIC_DATA_PATH")
 
     # FFmpeg location
-    FFMPEG_LOCATION = default_section.get("FFMPEG_LOCATION")
+    _FFMPEG_LOCATION = default_section.get("FFMPEG_LOCATION")
 
     # Set default values
-    if not HOST:
+    if not _HOST:
         HOST = "localhost"
-    if not PORT:
+    else:
+        HOST = _HOST
+    if not _PORT:
         PORT = "5000"
-    if not USERNAME:
+    else:
+        PORT = _PORT
+    if not _USERNAME:
         USERNAME = ""
-    if not PASSWORD:
+    else:
+        USERNAME = _USERNAME
+    if not _PASSWORD:
         PASSWORD = ""
-    if not MUSIC_DATA_PATH:
+    else:
+        PASSWORD = _PASSWORD
+    if not _MUSIC_DATA_PATH:
         MUSIC_DATA_PATH = "./data"
-    if not FFMPEG_LOCATION:
+    else:
+        MUSIC_DATA_PATH = _MUSIC_DATA_PATH
+    if not _FFMPEG_LOCATION:
         FFMPEG_LOCATION = "/usr/bin"
+    else:
+        FFMPEG_LOCATION = _FFMPEG_LOCATION

@@ -238,7 +238,7 @@ def upload_playlist():
 
     skipped = 0
     for index, file in enumerate(files):
-        if file.filename == '':
+        if file.filename == '' or file.filename is None:
             skipped += 1
             continue  # 跳過沒有檔名的檔案
         save_path = os.path.join(upload_folder, f"{index-skipped}.mp3")
@@ -294,7 +294,7 @@ def upload_files_to_playlist():
 
     skipped = 0
     for index, file in enumerate(files):
-        if file.filename == '':
+        if file.filename == '' or file.filename is None:
             skipped += 1
             continue
         save_path = os.path.join(Config.MUSIC_DATA_PATH, list_id, f"{start + index - skipped}.mp3")

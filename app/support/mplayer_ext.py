@@ -87,7 +87,7 @@ def create_playlist(yt_playlist_id: str, xid: str | None = None):
 
     Progress.progress[xid]["done"] = total
 
-def update_playlist(list_id: str, to_remove = False, xid: str | None = None):
+def update_playlist(list_id, to_remove = False, xid: str | None = None):
     """
     1. load playlist info
     2. compare the info with old info, if not exist, download
@@ -241,7 +241,7 @@ def create_playlist_by_upload(files: list[FileStorage], playlist_name: str, xid:
 
     skipped = 0
     for index, file in enumerate(files):
-        if file.filename == '':
+        if file.filename == '' or file.filename is None:
             skipped += 1
             if xid is not None:
                 Progress.progress[xid]["done"] += 1
