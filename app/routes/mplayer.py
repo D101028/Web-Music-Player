@@ -213,7 +213,7 @@ def mplayer_delete_song():
     with open(json_playlist_path, "w") as fp:
         json.dump(list_info, fp)
 
-    return "delete successfully (Note that if the song is still in the yt playlist, it will be added back when the playlist is updated)", 200
+    return "delete successfully", 200
 
 @mplayer_bp.route('/send_audio_file/<filename>')
 @browser_only

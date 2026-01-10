@@ -191,7 +191,7 @@
                 fetch(url, {method: "POST"})
                     .then( (response) => {
                         if (response.status === 200) {
-                            alert('delete file successfully');
+                            alert('delete file successfully (Note that if the song is still in the yt playlist, it will be added back when the playlist is updated)');
                             location.reload();
                         } else {
                             alert('failed to delete file: ' + response.statusText);
