@@ -35,7 +35,8 @@
 
     <br>
 
-    <div class="compressed-data-block">
+    <button id="toggleCompressBlockButton">Compress Playlists</button>
+    <div class="compressed-data-block" id="compressBlock" style="display: none;">
         <a class="compress-data-button" href="/compress_data">Compress Data</a>
         <label for="compressedDataSelect">Compressed Files: </label>
         <select id="compressedDataSelect">
@@ -87,7 +88,10 @@
         let xhr = null; 
 
         const inputBlock = document.getElementById('inputBlock');
-        const toggleButton = document.getElementById('toggleInputBlockButton');
+        const toggleInputBlockButton = document.getElementById('toggleInputBlockButton');
+
+        const compressBlock = document.getElementById('compressBlock');
+        const toggleCompressBlockButton = document.getElementById('toggleCompressBlockButton');
 
         for (let [index, value] of listsInfo.entries()) {
             const anchor = document.createElement('a');
@@ -208,13 +212,23 @@
             }
         });
 
-        document.getElementById('toggleInputBlockButton').addEventListener('click', () => {
+        toggleInputBlockButton.addEventListener('click', () => {
             if (inputBlock.style.display === "none" || !inputBlock.style.display) {
                 inputBlock.style.display = "block";
-                toggleButton.textContent = "Hide";
+                toggleInputBlockButton.textContent = "Hide";
             } else {
                 inputBlock.style.display = "none";
-                toggleButton.textContent = "Add Playlist";
+                toggleInputBlockButton.textContent = "Add Playlist";
+            }
+        });
+    
+        toggleCompressBlockButton.addEventListener('click', () => {
+            if (compressBlock.style.display === "none" || !compressBlock.style.display) {
+                compressBlock.style.display = "block";
+                toggleCompressBlockButton.textContent = "Hide";
+            } else {
+                compressBlock.style.display = "none";
+                toggleCompressBlockButton.textContent = "Compress Playlists";
             }
         });
     </script>
