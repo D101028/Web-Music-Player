@@ -183,6 +183,38 @@ def mplayer_rename_song():
 
     return "rename successfully", 200
 
+@mplayer_bp.route('/mplayer_delete_song', methods=['POST'])
+@browser_only
+@logged_in_only
+def mplayer_delete_song():
+    list_id = request.args.get('list_id')
+    if list_id in (None, ""):
+        return "wrong list_id", 400
+    song_id = request.args.get('song_id')
+    if song_id in (None, ""):
+        return "wrong song_id", 400
+
+    dir_path = os.path.join(Config.MUSIC_DATA_PATH, list_id)
+    if not os.path.isdir(dir_path):
+        return f"no list id: {list_id}", 400
+    json_playlist_path = os.path.join(dir_path, "playlist.json")
+    with open(json_playlist_path, "rb") as fp:
+        list_info = json.load(fp)
+    
+    if int(song_id) >= len(list_info["contents"]):
+        return f"no song id: {song_id}", 400
+    os.remove(os.path.join(dir_path, f"{song_id}.mp3"))
+    for i in range(int(song_id), len(list_info["contents"]) - 1):
+        list_info["contents"][i] = list_info["contents"][i+1]
+        fp = os.path.join(dir_path, f"{i+1}.mp3")
+        os.rename(fp, os.path.join(dir_path, f"{i}.mp3"))
+    list_info["contents"].pop()
+
+    with open(json_playlist_path, "w") as fp:
+        json.dump(list_info, fp)
+
+    return "delete successfully (Note that if the song is still in the yt playlist, it will be added back when the playlist is updated)", 200
+
 @mplayer_bp.route('/send_audio_file/<filename>')
 @browser_only
 @logged_in_only
