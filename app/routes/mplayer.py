@@ -9,7 +9,7 @@ from urllib.parse import unquote
 from ..config import Config
 from ..support.mplayer_ext import threading_compress_data
 from ..support.filter import browser_only, logged_in_only
-from ..support.mplayer_ext import Progress, threading_create_playlist, threading_update_playlist
+from ..support.mplayer_ext import Progress, threading_create_playlist, threading_update_playlist, threading_upgrade_ytdlp
 from ..support.yt import check_playlist_accessibility
 
 COMPRESSED_DATA_PATERN = "%Y-%m-%d-%H-%M-%S"
@@ -373,3 +373,15 @@ def delete_compressed_data():
     except Exception:
         abort(500)
     return "File deleted successfully", 200
+
+@mplayer_bp.route('/upgrade_ytdlp')
+@browser_only
+@logged_in_only
+def upgrade_ytdlp():
+    xid = threading_upgrade_ytdlp()
+
+    return render_template("mplayer_progress.html", 
+                           fetch_progress_url = f"/mplayer_fetch_progress?xid={xid}", 
+                           redir_href = "/mplayer")
+
+

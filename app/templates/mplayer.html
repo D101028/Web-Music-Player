@@ -77,6 +77,10 @@
         </script>
     </div>
 
+    <br>
+
+    <button id="upgradeYtdlpButton">Update yt-dlp</button>
+
     <h2>Playlist</h2>
     <div id="playlists"></div>
 
@@ -230,6 +234,10 @@
                 compressBlock.style.display = "none";
                 toggleCompressBlockButton.textContent = "Compress Playlists";
             }
+        });
+    
+        document.getElementById('upgradeYtdlpButton').addEventListener('click', () => {
+            window.location.href = '/upgrade_ytdlp';
         });
     </script>
 </body>
