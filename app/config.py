@@ -84,4 +84,4 @@ class Config:
     else:
         COMPRESSED_DATA_PATH = _COMPRESSED_DATA_PATH
     if not _YT_DLP_COOKIES_PATH:
-        YT_DLP_COOKIES_PATH = os.getcwd()
+        YT_DLP_COOKIES_PATH = os.path.join(os.getcwd(), "cookies.txt")
