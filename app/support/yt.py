@@ -99,6 +99,7 @@ def yt_download_audio(vid: str, basename: str, dest: str, ext: str = "mp3"):
            "--ffmpeg-location", Config.FFMPEG_LOCATION, 
            "--extract-audio", 
            "-o", "temp", 
+           "--js-runtimes", f"deno:{Config.YT_DLP_DENO_PATH}",
            "--cookies", Config.YT_DLP_COOKIES_PATH, 
            url]
     process = Popen(cmd, cwd=temp_dir)
