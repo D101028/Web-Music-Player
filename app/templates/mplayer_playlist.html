@@ -47,7 +47,7 @@
         <div class="options-container">
             <button class="more-options-btn" onclick="toggleOptions(this)"> ⋮ </button>
             <ul class="options-list" style="display: none;">
-                <!-- <li><a href="#">Delete</a></li> -->
+                <li><a href="javascript:;" onclick="askAndDeleteSong('{{ list_id }}', '{{ i }}')">Delete</a></li>
                 <li><a href="javascript:;" onclick="askAndRenameSong('{{ list_id }}', '{{ i }}')">Rename</a></li>
                 <!-- <li><a href="#">Share</a></li> -->
             </ul>
@@ -185,6 +185,23 @@
             }
         });
         
+        function askAndDeleteSong(list_id, song_id) {
+            if (confirm("Are you sure you want to delete this song?")) {
+                let url = `/mplayer_delete_song?list_id=${list_id}&song_id=${song_id}`
+                fetch(url, {method: "POST"})
+                    .then( (response) => {
+                        if (response.status === 200) {
+                            alert('delete file successfully (Note that if the song is still in the yt playlist, it will be added back when the playlist is updated)');
+                            location.reload();
+                        } else {
+                            alert('failed to delete file: ' + response.statusText);
+                            location.reload();
+                        }
+                    } )
+                    .catch( (error) => alert(error) );
+            }
+        }
+
     </script>
 </body>
 </html>

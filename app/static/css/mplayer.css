@@ -78,7 +78,7 @@ a:hover {
     box-sizing: border-box;
 }
 
-.input-block button, #toggleInputBlockButton, input[type="submit"], .compress-data-button {
+.input-block button, #toggleInputBlockButton, #toggleCompressBlockButton, #upgradeYtdlpButton, input[type="submit"], .compress-data-button {
     margin: 10px;
     padding: 8px 15px;
     background-color: #444444;
@@ -104,7 +104,7 @@ input[type="file"] {
     transition: background-color 0.3s ease;
 }
 
-.input-block button:hover, #toggleInputBlockButton:hover, input[type="submit"]:hover, .compress-data-button:hover {
+.input-block button:hover, #toggleInputBlockButton:hover, #toggleCompressBlockButton:hover, #upgradeYtdlpButton:hover, input[type="submit"]:hover, .compress-data-button:hover {
     background-color: #666666;
 }
 

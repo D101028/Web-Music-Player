@@ -9,7 +9,7 @@ from urllib.parse import unquote
 from ..config import Config
 from ..support.mplayer_ext import threading_compress_data
 from ..support.filter import browser_only, logged_in_only
-from ..support.mplayer_ext import Progress, threading_create_playlist, threading_update_playlist
+from ..support.mplayer_ext import Progress, threading_create_playlist, threading_update_playlist, threading_upgrade_ytdlp
 from ..support.yt import check_playlist_accessibility
 
 COMPRESSED_DATA_PATERN = "%Y-%m-%d-%H-%M-%S"
@@ -182,6 +182,38 @@ def mplayer_rename_song():
         json.dump(list_info, fp)
 
     return "rename successfully", 200
+
+@mplayer_bp.route('/mplayer_delete_song', methods=['POST'])
+@browser_only
+@logged_in_only
+def mplayer_delete_song():
+    list_id = request.args.get('list_id')
+    if list_id in (None, ""):
+        return "wrong list_id", 400
+    song_id = request.args.get('song_id')
+    if song_id in (None, ""):
+        return "wrong song_id", 400
+
+    dir_path = os.path.join(Config.MUSIC_DATA_PATH, list_id)
+    if not os.path.isdir(dir_path):
+        return f"no list id: {list_id}", 400
+    json_playlist_path = os.path.join(dir_path, "playlist.json")
+    with open(json_playlist_path, "rb") as fp:
+        list_info = json.load(fp)
+    
+    if int(song_id) >= len(list_info["contents"]):
+        return f"no song id: {song_id}", 400
+    os.remove(os.path.join(dir_path, f"{song_id}.mp3"))
+    for i in range(int(song_id), len(list_info["contents"]) - 1):
+        list_info["contents"][i] = list_info["contents"][i+1]
+        fp = os.path.join(dir_path, f"{i+1}.mp3")
+        os.rename(fp, os.path.join(dir_path, f"{i}.mp3"))
+    list_info["contents"].pop()
+
+    with open(json_playlist_path, "w") as fp:
+        json.dump(list_info, fp)
+
+    return "delete successfully", 200
 
 @mplayer_bp.route('/send_audio_file/<filename>')
 @browser_only
@@ -373,3 +405,15 @@ def delete_compressed_data():
     except Exception:
         abort(500)
     return "File deleted successfully", 200
+
+@mplayer_bp.route('/upgrade_ytdlp')
+@browser_only
+@logged_in_only
+def upgrade_ytdlp():
+    xid = threading_upgrade_ytdlp()
+
+    return render_template("mplayer_progress.html", 
+                           fetch_progress_url = f"/mplayer_fetch_progress?xid={xid}", 
+                           redir_href = "/mplayer")
+
+

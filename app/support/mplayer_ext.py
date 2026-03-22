@@ -7,6 +7,7 @@ from datetime import datetime
 from werkzeug.datastructures import FileStorage
 from threading import Thread
 from typing import TypedDict
+from subprocess import Popen, PIPE
 
 from ..config import Config
 from .yt import get_yt_playlist_info, yt_download_audio, PlaylistInfo, VideoInfo
@@ -330,6 +331,33 @@ def threading_compress_data(folder_path: str, zip_path: str) -> str:
     
     Progress.progress[xid]["total"] = total
     t = Thread(target=compress_folder_to_zip, args=(folder_path, zip_path, xid))
+    t.start()
+    def del_pro():
+        t.join()
+        time.sleep(60)
+        Progress.del_progress(xid)
+    t2 = Thread(target=del_pro)
+    t2.start()
+    return xid
+
+def upgrade_ytdlp(xid: str):
+    try:
+        # Path to the virtual environment's activate script
+        venv_activate_script = os.path.join(os.getcwd(), '.venv', 'Scripts', 'activate') # For Windows
+        if not os.path.exists(venv_activate_script): # For Linux/macOS
+            venv_activate_script = os.path.join(os.getcwd(), '.venv', 'bin', 'activate')
+        # Command to upgrade yt-dlp using pip within the virtual environment
+        # Using Popen with shell=True to execute the activation script and then the pip command
+        command = f'"{venv_activate_script}" && pip install --upgrade yt-dlp'
+        process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = process.communicate()
+        Progress.progress[xid]["done"] = 1
+    except Exception as e:
+        return 
+    
+def threading_upgrade_ytdlp():
+    xid = Progress.init_progress(1)
+    t = Thread(target=upgrade_ytdlp, args=(xid,))
     t.start()
     def del_pro():
         t.join()
