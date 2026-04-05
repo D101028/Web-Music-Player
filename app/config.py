@@ -1,5 +1,6 @@
 import argparse
 import configparser
+import os
 
 # Initialize the parser
 parser = argparse.ArgumentParser(description="A script that uses command-line arguments.")
@@ -33,6 +34,7 @@ class Config:
     MUSIC_DATA_PATH: str
     FFMPEG_LOCATION: str
     COMPRESSED_DATA_PATH: str
+    YT_DLP_COOKIES_PATH: str
 
     # Flask configuration
     _HOST = default_section.get("HOST")
@@ -48,6 +50,10 @@ class Config:
 
     # FFmpeg location
     _FFMPEG_LOCATION = default_section.get("FFMPEG_LOCATION")
+
+    # YT-DLP challenge
+    _YT_DLP_COOKIES_PATH = default_section.get("YT_DLP_COOKIES_PATH")
+    _YT_DLP_DENO_PATH = default_section.get("YT_DLP_DENO_PATH")
 
     # Set default values
     if not _HOST:
@@ -78,3 +84,11 @@ class Config:
         COMPRESSED_DATA_PATH = "./.compressed"
     else:
         COMPRESSED_DATA_PATH = _COMPRESSED_DATA_PATH
+    if not _YT_DLP_COOKIES_PATH:
+        YT_DLP_COOKIES_PATH = os.path.join(os.getcwd(), "cookies.txt")
+    else:
+        YT_DLP_COOKIES_PATH = _YT_DLP_COOKIES_PATH
+    if not _YT_DLP_DENO_PATH:
+        YT_DLP_DENO_PATH = "~/.deno/bin/deno"
+    else:
+        YT_DLP_DENO_PATH = _YT_DLP_DENO_PATH
