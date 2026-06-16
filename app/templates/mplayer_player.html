@@ -29,108 +29,148 @@
     </script>
     <script>
         const audioFiles = JSON.parse(document.getElementById('audio-files-data').textContent);
-        const sequence = JSON.parse(document.getElementById('seq-data').textContent);
+        const sequence = JSON.parse(document.getElementById('seq-data').textContent); 
         const titles = JSON.parse(document.getElementById('titles-data').textContent);
         let currentSeqIndex = -1;
 
         const audioPlayer = document.getElementById('audioPlayer');
-        audioPlayer.volume = 0.3;
+        audioPlayer.volume = 0.3; // Set initial volume to 50%
         const audioSource = document.getElementById('audioSource');
         const nextButton = document.getElementById('nextButton');
         const previousButton = document.getElementById('previousButton');
         const titleDiv = document.getElementById('title');
 
-        // 建立一個變數來儲存超時定時器
-        let loadTimeout;
-
         function createMediaMetadata(title) {
-            return new MediaMetadata({
+            metadata = new MediaMetadata({
                 title: title,
                 artist: 'Earphone control enabled',
                 album: '{{ list_name }}',
+                // artwork: [
+                //     { src: 'https://via.placeholder.com/96', sizes: '96x96', type: 'image/png' },
+                //     { src: 'https://via.placeholder.com/128', sizes: '128x128', type: 'image/png' },
+                //     { src: 'https://via.placeholder.com/192', sizes: '192x192', type: 'image/png' }
+                // ]
             });
+            return metadata; 
         }
 
         function playAudio(seqIndex) {
-            // 1. 清除上一次的超時設定
-            clearTimeout(loadTimeout);
-
-            const fileName = audioFiles[sequence[seqIndex]];
-            audioSource.src = `/send_audio_file/${fileName}?list_id={{ list_id }}`;
-            
-            const curTitle = titles[sequence[seqIndex]];
-            titleDiv.textContent = "Loading: " + curTitle; // 顯示載入中狀態
-
-            // 2. 執行負載
+            audioSource.src = `/send_audio_file/${audioFiles[sequence[seqIndex]]}?list_id={{ list_id }}`;
             audioPlayer.load();
-
-            // 3. 處理播放 Promise (捕捉播放被阻擋或立即性的錯誤)
-            const playPromise = audioPlayer.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.error("Playback failed immediately:", error);
-                    // 如果是自動播放被瀏覽器阻擋，通常不跳過；但如果是資源錯誤，則靠 error listener 處理
-                });
-            }
-
-            // 4. 設定「超時自動跳下一首」
-            // 如果 10 秒內沒有成功開始播放，就視為超時並跳過
-            loadTimeout = setTimeout(() => {
-                if (audioPlayer.paused || audioPlayer.readyState < 3) { 
-                    console.warn("Loading timeout, skipping to next...");
-                    playNext();
-                }
-            }, 10000); // 10秒可根據網路狀況調整
+            audioPlayer.play();
+            
+            const curTitle = titles[sequence[seqIndex]]
+            titleDiv.textContent = curTitle; 
+            navigator.mediaSession.metadata = createMediaMetadata(curTitle); 
         }
 
         function playNext() {
             currentSeqIndex++;
-            if (currentSeqIndex >= sequence.length) {
+            if (currentSeqIndex >= audioFiles.length) {
                 currentSeqIndex = 0;
             }
-            playAudio(currentSeqIndex);
+            playAudio(currentSeqIndex); 
         }
-
         function playPrevious() {
-            currentSeqIndex--;
+            currentSeqIndex--; 
             if (currentSeqIndex < 0) {
-                currentSeqIndex = sequence.length - 1;
+                currentSeqIndex = audioFiles.length - 1; 
             }
-            playAudio(currentSeqIndex);
+            playAudio(currentSeqIndex); 
         }
 
-        // --- 關鍵錯誤處理部分 ---
 
-        // A. 監聽音頻錯誤 (404, 500, 網路中斷等)
-        audioPlayer.addEventListener('error', (e) => {
-            console.error("Audio error event triggered. Skipping...", e);
-            // 延遲 2 秒再跳下一首，避免在完全沒網路時陷入無限快速循環請求
-            setTimeout(playNext, 2000); 
+        // 1. 封裝更新媒體資訊的函式（讓每次切歌都能同步到鎖定畫面）
+        function updateMediaSession() {
+            if ('mediaSession' in navigator) {
+                const currentTitle = titles[sequence[currentSeqIndex]];
+                navigator.mediaSession.metadata = createMediaMetadata(currentTitle);
+                // 每次播新歌，重設狀態
+                navigator.mediaSession.playbackState = 'playing';
+            }
+        }
+
+        // 2. 斷線自動重連機制（防止卡死太久被系統判定閒置）
+        let bufferTimeout = null;
+
+        audioPlayer.addEventListener('waiting', () => {
+            if ('playbackState' in navigator.mediaSession) {
+                navigator.mediaSession.playbackState = 'playing'; // 騙系統還在播
+            }
+
+            // 如果卡住（緩衝）超過 8 秒，觸發主動重連，避免被手機系統 Kill 掉
+            clearTimeout(bufferTimeout);
+            bufferTimeout = setTimeout(() => {
+                if (!audioPlayer.paused && audioPlayer.readyState < 3) { 
+                    console.log('網路卡死過久，嘗試主動重載流...');
+                    const currentTime = audioPlayer.currentTime;
+                    audioPlayer.load(); // 重新初始化連接
+                    audioPlayer.currentTime = currentTime; // 跳回原時間點
+                    audioPlayer.play().catch(err => console.log('等待恢復或需要使用者互動:', err));
+                }
+            }, 8000); // 8 秒沒動靜就重連
         });
 
-        // B. 當音頻成功開始播放時，清除超時計時器
+        // 緩衝結束，恢復播放時清除計時器
         audioPlayer.addEventListener('playing', () => {
-            clearTimeout(loadTimeout);
-            const curTitle = titles[sequence[currentSeqIndex]];
-            titleDiv.textContent = curTitle; // 更新回正確標題
-            
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.metadata = createMediaMetadata(curTitle);
+            clearTimeout(bufferTimeout);
+            if ('playbackState' in navigator.mediaSession) {
+                navigator.mediaSession.playbackState = 'playing';
             }
         });
 
-        // 正常的結束行為
-        audioPlayer.addEventListener('ended', playNext);
+        // 監聽播放與暫停，即時同步手機控制中心狀態
+        audioPlayer.addEventListener('play', () => {
+            if ('playbackState' in navigator.mediaSession) {
+                navigator.mediaSession.playbackState = 'playing';
+            }
+        });
+        audioPlayer.addEventListener('pause', () => {
+            if ('playbackState' in navigator.mediaSession) {
+                navigator.mediaSession.playbackState = 'paused';
+            }
+        });
 
-        nextButton.addEventListener('click', playNext);
-        previousButton.addEventListener('click', playPrevious);
+        audioPlayer.addEventListener('ended', () => {
+            playNext();
+            updateMediaSession(); // 切歌時更新資訊
+        });
+
+        nextButton.addEventListener('click', () => {
+            playNext();
+            updateMediaSession();
+        });
+
+        previousButton.addEventListener('click', () => {
+            playPrevious();
+            updateMediaSession();
+        });
+
+        // --- Media Session API 完整註冊 ---
+
+        if ('mediaSession' in navigator) {
+            // 必須註冊 play 和 pause，鎖定畫面和藍牙耳機的控制才會完全被啟動
+            navigator.mediaSession.setActionHandler('play', () => {
+                audioPlayer.play().catch(err => console.log(err));
+            });
+            
+            navigator.mediaSession.setActionHandler('pause', () => {
+                audioPlayer.pause();
+            });
+
+            navigator.mediaSession.setActionHandler('nexttrack', () => {
+                playNext();
+                updateMediaSession();
+            });
+
+            navigator.mediaSession.setActionHandler('previoustrack', () => {
+                playPrevious();
+                updateMediaSession();
+            });
+        }
 
         // 初始播放
         playNext();
-
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.setActionHandler('nexttrack', playNext);
-            navigator.mediaSession.setActionHandler('previoustrack', playPrevious);
-        }
+        updateMediaSession(); // 初始載入第一首的資訊
     </script>
 </body>
