@@ -366,3 +366,8 @@ def threading_upgrade_ytdlp():
     t2 = Thread(target=del_pro)
     t2.start()
     return xid
+
+def update_cookies(cookies_netscape: str):
+    with open(Config.YT_DLP_COOKIES_PATH, mode="w", encoding="utf-8") as fp:
+        fp.write(cookies_netscape)
+

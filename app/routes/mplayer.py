@@ -9,7 +9,7 @@ from urllib.parse import unquote
 from ..config import Config
 from ..support.mplayer_ext import threading_compress_data
 from ..support.filter import browser_only, logged_in_only
-from ..support.mplayer_ext import Progress, threading_create_playlist, threading_update_playlist, threading_upgrade_ytdlp
+from ..support.mplayer_ext import Progress, threading_create_playlist, threading_update_playlist, threading_upgrade_ytdlp, update_cookies
 from ..support.yt import check_playlist_accessibility
 
 COMPRESSED_DATA_PATERN = "%Y-%m-%d-%H-%M-%S"
@@ -416,4 +416,11 @@ def upgrade_ytdlp():
                            fetch_progress_url = f"/mplayer_fetch_progress?xid={xid}", 
                            redir_href = "/mplayer")
 
-
+@mplayer_bp.route('/update_cookies', methods=['POST'])
+@browser_only
+@logged_in_only
+def update_cookies_():
+    data = request.get_json()
+    
+    update_cookies(data["raw_cookies"])
+    return "Cookies updated succesfully", 200

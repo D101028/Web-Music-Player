@@ -3,6 +3,7 @@ data/
 test*
 .compressed/*
 cookies.txt
+test.conf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -11,7 +11,7 @@
     
     <br>
     
-    <button id="toggleInputBlockButton">Add Playlist</button>
+    <button class="std-btn" id="toggleInputBlockButton">Add Playlist</button>
     <div class="input-block" id="inputBlock" style="display: none;">
         <div>By Files (.mp3 only): </div>
         <br>
@@ -20,7 +20,7 @@
             <br>
             <input type="text" id="uploadName" placeholder="Enter name of playlist"/>
             <br><br>
-            <input type="submit" value="Upload"/>
+            <input class="std-btn" type="submit" value="Upload"/>
         </form>
         <br>
         <div class="spinner" id="spinner"></div>
@@ -30,14 +30,14 @@
         <br>
         <input type="text" id="newPlaylistName" placeholder="Enter YouTube playlist link or ID" />
         <br><br>
-        <button id="addPlaylistButton">OK</button>
+        <button class="std-btn" id="addPlaylistButton">OK</button>
     </div>
 
     <br>
 
-    <button id="toggleCompressBlockButton">Compress Playlists</button>
+    <button class="std-btn" id="toggleCompressBlockButton">Compress Playlists</button>
     <div class="compressed-data-block" id="compressBlock" style="display: none;">
-        <a class="compress-data-button" href="/compress_data">Compress Data</a>
+        <a class="std-btn compress-data-button" href="/compress_data">Compress Data</a>
         <label for="compressedDataSelect">Compressed Files: </label>
         <select id="compressedDataSelect">
             {% for filename in compressed_data_list %}
@@ -79,7 +79,13 @@
 
     <br>
 
-    <button id="upgradeYtdlpButton">Update yt-dlp</button>
+    <button class="std-btn" id="upgradeYtdlpButton">Upgrade yt-dlp</button>
+
+    <br>
+
+    <button class="std-btn" id="updateCookiesButton">Update cookies</button>
+
+    </div>
 
     <h2>Playlist</h2>
     <div id="playlists"></div>
@@ -239,6 +245,67 @@
         document.getElementById('upgradeYtdlpButton').addEventListener('click', () => {
             window.location.href = '/upgrade_ytdlp';
         });
+
+        async function customMultiLinePrompt(message) {
+            return new Promise((resolve) => {
+                // 建立背景遮罩
+                const overlay = document.createElement('div');
+                overlay.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(5,10,20,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:Inter,Segoe UI,system-ui,sans-serif;backdrop-filter:blur(5px);';
+                
+                // 建立對話框
+                const box = document.createElement('div');
+                box.style = 'background:linear-gradient(180deg, rgba(12,18,30,0.98), rgba(18,30,50,0.98));padding:24px;border:1px solid rgba(45,160,255,0.22);border-radius:16px;width:420px;display:flex;flex-direction:column;gap:14px;box-shadow:0 0 45px rgba(20,120,255,0.18);color:#e8f3ff;';
+                
+                // 建立提示文字與多行輸入框
+                box.innerHTML = `
+                <label style="font-weight:700;font-size:15px;color:#d0e7ff;">${message}</label>
+                <textarea id="cookieInput" rows="6" style="width:100%;box-sizing:border-box;padding:12px;background:#121b2f;color:#eaf4ff;border:1px solid rgba(100,180,255,0.18);border-radius:10px;outline:none;font-family:ui-monospace,monospace;font-size:13px;resize:vertical;"></textarea>
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:8px;">
+                    <button id="cancelBtn" style="padding:8px 14px;cursor:pointer;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#b8c8e8;">取消</button>
+                    <button id="confirmBtn" style="padding:8px 14px;cursor:pointer;background:#0c7cff;color:white;border:none;border-radius:10px;box-shadow:0 0 18px rgba(12,124,255,0.35);">確定</button>
+                </div>
+                `;
+                
+                overlay.appendChild(box);
+                document.body.appendChild(overlay);
+                
+                // 綁定按鈕事件
+                box.querySelector('#cancelBtn').onclick = () => { overlay.remove(); resolve(null); };
+                box.querySelector('#confirmBtn').onclick = () => {
+                const val = box.querySelector('#cookieInput').value;
+                overlay.remove();
+                resolve(val);
+                };
+            });
+        }
+
+        document.getElementById('updateCookiesButton').addEventListener('click', () => {
+            customMultiLinePrompt("Raw Cookies (in Netscape format):")
+                .then((cookies) => {
+                    if (!cookies || cookies === "" || cookies === "null") return ;
+
+                    const url = '/update_cookies'; 
+                    fetch(url, {
+                        method: "POST", 
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ raw_cookies: cookies })
+                    })
+                        .then( (response) => {
+                            if (response.status === 200) {
+                                alert('Update Succesfully');
+                                // location.reload();
+                            } else {
+                                response.text().then((text) => alert(text));
+                                // location.reload();
+                            }
+                        } )
+                        .catch( (error) => alert(error) );
+                })
+                .catch( (error) => alert(error) );
+            });
+    
     </script>
 </body>
 </html>
