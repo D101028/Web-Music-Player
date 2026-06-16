@@ -348,7 +348,7 @@ def upgrade_ytdlp(xid: str):
             venv_activate_script = os.path.join(os.getcwd(), '.venv', 'bin', 'activate')
         # Command to upgrade yt-dlp using pip within the virtual environment
         # Using Popen with shell=True to execute the activation script and then the pip command
-        command = f'source "{venv_activate_script}" && pip install --upgrade yt-dlp'
+        command = f'. "{venv_activate_script}" && pip install --upgrade yt-dlp'
         process = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = process.communicate()
         Progress.progress[xid]["done"] = 1
