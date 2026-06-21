@@ -7,11 +7,12 @@ def create_app():
     app.secret_key = os.urandom(24)  # Set a secret key for session encryption
 
     # Register blueprints
-    from app.routes import home_bp, auth_bp, mplayer_bp
+    from app.routes import home_bp, auth_bp, mplayer_bp, radio_bp
 
     app.register_blueprint(home_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(mplayer_bp)
+    app.register_blueprint(radio_bp)
 
     return app
 

@@ -15,7 +15,10 @@
         <a href="/mplayer_update?list_id={{ list_id }}" class="update-button">Update Playlist</a>
         <br>
         <br>
-        <button id="toggleUploadFileBlockButton" class="toggle-upload-button">
+        <button class="std-btn" onclick="copyRadioURL('{{ list_id }}')">Copy Radio Link</button>
+        <br>
+        <br>
+        <button id="toggleUploadFileBlockButton" class="std-btn">
             Upload Files
         </button>
         <div class="upload-block" id="uploadBlock" style="display: none;">
@@ -202,6 +205,23 @@
             }
         }
 
+        function copyRadioURL(list_id) {
+            const api = `/radio/copy_link/${list_id}`;
+            fetch(api, {method: "POST"})
+                .then((response) => {
+                    response.json()
+                        .then((data) => {
+                            const url = `${window.location.origin}${data['url-tail']}`;
+                            navigator.clipboard.writeText(url)
+                                .then(() => {
+                                    alert("Link copied!");
+                                });
+                        });
+                })
+                .catch((err) => {
+                    alert(`Error Occurred: ${err}`);
+                });
+        }
     </script>
 </body>
 </html>

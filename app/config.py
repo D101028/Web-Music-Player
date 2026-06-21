@@ -35,6 +35,7 @@ class Config:
     FFMPEG_LOCATION: str
     COMPRESSED_DATA_PATH: str
     YT_DLP_COOKIES_PATH: str
+    RADIO_URL_UUID: str | None
 
     # Flask configuration
     _HOST = default_section.get("HOST")
@@ -54,6 +55,9 @@ class Config:
     # YT-DLP challenge
     _YT_DLP_COOKIES_PATH = default_section.get("YT_DLP_COOKIES_PATH")
     _YT_DLP_DENO_PATH = default_section.get("YT_DLP_DENO_PATH")
+
+    # Radio URL UUID
+    _RADIO_URL_UUID = default_section.get("RADIO_URL_UUID")
 
     # Set default values
     if not _HOST:
@@ -92,3 +96,7 @@ class Config:
         YT_DLP_DENO_PATH = "~/.deno/bin/deno"
     else:
         YT_DLP_DENO_PATH = _YT_DLP_DENO_PATH
+    if not _RADIO_URL_UUID:
+        RADIO_URL_UUID = None
+    else:
+        RADIO_URL_UUID = _RADIO_URL_UUID

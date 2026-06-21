@@ -42,7 +42,7 @@ body {
     background-color: #08891d;
 }
 
-.toggle-upload-button {
+.std-btn {
     padding: 8px 15px;
     background-color: #444444;
     color: #ffffff;
@@ -52,8 +52,7 @@ body {
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
-
-.toggle-upload-button:hover {
+.std-btn:hover {
     background-color: #666666;
 }
 
