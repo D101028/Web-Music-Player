@@ -8,6 +8,7 @@
 - **Can be deployed locally or publicly**: Flexibility to run the music player on your local machine for personal use or deploy it on a public server for wider access.
 - **Download audio from a given YouTube playlist link/ID**: Easily download audio tracks from YouTube by providing a playlist link or ID, enabling offline listening.
 - **Manage downloaded audio files**: Organize and manage your downloaded audio files with ease, ensuring your music library is always up-to-date and well-maintained.
+- **Online radio player**: This project contains a mini online radio player, making it available to play the playlist through an online radio url. 
 
 ## Getting started
 
