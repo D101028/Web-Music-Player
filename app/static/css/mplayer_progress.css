@@ -1,8 +1,4 @@
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #121212;
-    color: #ffffff;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -30,15 +26,6 @@ body {
     width: 0%;
     background-color: #4caf50;
     transition: width 0.3s ease;
-}
-
-.spinner {
-    border: 4px solid rgba(255, 255, 255, 0.2);
-    border-top: 4px solid #4caf50;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
