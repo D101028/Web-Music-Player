@@ -4,9 +4,8 @@ from app.config import Config
 
 def get_list_path(list_id: str, check: bool = False):
     path = os.path.join(Config.MUSIC_DATA_PATH, list_id)
-    if check:
-        if not os.path.isdir(path):
-            raise Exception(f"Playlist {list_id} Does Not Exist")
+    if check and not os.path.isdir(path):
+        raise Exception(f"Playlist {list_id} Does Not Exist")
     return path
 
 def list_id_exists(list_id: str):
