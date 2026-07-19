@@ -44,6 +44,14 @@ Install the required modules.
 $ pip install -r requirements.txt
 ```
 
+Install required packages.
+```shell
+# Install Deno (zip needed)
+$ curl -fsSL https://deno.land/install.sh | sh
+# Install ffmpeg
+$ sudo apt install ffmpeg
+```
+
 ### Usage
 To modify the `config.conf` file, follow these steps:
 
